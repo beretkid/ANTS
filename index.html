@@ -1,13 +1,17 @@
 <body style="background-color: black;"></body>
 
 <canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas>
-<div id="menu" hidden style="background-color:#717171;z-index:10;position:absolute; top:0%;left:0%;"><text id="fps">defps</text>
+<div id="menu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:10px;">
+<div id="menu2" hidden style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:10px;">
+<text id="fps">defps</text>
 <div></div>
 
 </div>
+
+</div>
 <head>
-  <title>Ants</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+  <title>ANTS</title>
+<link rel="icon" type="image/png" href="favicon.png">
 </head>
 <script>
 canvas = document.getElementById('visuals');
@@ -47,14 +51,21 @@ function slowDarken(color,amnt) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
 	 jump=4
-	 amnt=settings.fadeAmount
+	 amount=settings.fadeAmount
 	 start=0
     for (let i = start; i < data.length; i += jump) {
 	 
-        if (data[i] > 0) data[i] -= Math.sign(data[i]-color.r,settings.fadeAmount)*amnt   // Red
-        if (data[i+1] > 0) data[i+1] -= Math.sign(data[i+1]-color.g,settings.fadeAmount)*amnt    // Green
-        if (data[i+2] > 0) data[i+2] -= Math.sign(data[i+2]-color.b,settings.fadeAmount)  *amnt  // Blue
-		  if (isNaN(data[i])) console.log("PANIC!!")
+        data[i] -= Math.sign(data[i]-color.r)*amnt   // Red
+        data[i+1] -= Math.sign(data[i+1]-color.g)*amnt    // Green
+        data[i+2] -= Math.sign(data[i+2]-color.b)  *amnt  // Blue
+
+		  if (settings.grainyBackground){
+		  grain=settings.grainAmnt
+			if (Math.abs(data[i]-color.r)<2)data[i]+=random(-grain,grain,0)
+			if (Math.abs(data[i+1]-color.g)<2)data[i+1]+=random(-grain,grain,0)
+			if (Math.abs(data[i+2]-color.b)<2)data[i+2]+=random(-grain,grain,0)
+		  }
+		  
 		  
     }
     ctx.putImageData(imageData, 0, 0);
@@ -138,7 +149,7 @@ antBrain(curr)
 entities = entities.filter((ent) => !ent.remove);
 }
 
-settings = {fadeAmount:1,showAnts:false,doubleTap:true,startingAnts:18,mutations:5,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeStages:5,forceType:0}
+settings = {fadeAmount:1,showAnts:false,doubleTap:true,startingAnts:18,mutations:5,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeStages:5,forceType:0,grainyBackground:false,grainAmnt:10,facsDetermineBehavior:false,antSize:1}
 //make settings button
 for (i in settings) {
 newDiv = document.createElement('div')
@@ -170,7 +181,7 @@ factions=[]
 for (let i = 0; i < settings.startingAnts; i++) {
 rx=random(0,w)
 ry=random(0,h)
-fac=factions.push({ants:0,targ:{x:rx,y:ry}})
+fac=factions.push({ants:0,targ:{x:rx,y:ry},behavior:random(0,settings.mutations)})
 console.log(fac,factions[i])
 birthAnt(factions[i],rx,ry)
 }
@@ -213,8 +224,10 @@ curr.behavior.target.y=curr.faction.targ.y
 curr.behavior.target.amnt=1
 curr.acc=120
 }
-ctx.fillRect(Math.round(curr.x),Math.round(curr.y),1,1)
+size=settings.antSize
+ctx.fillRect(Math.round(curr.x),Math.round(curr.y),size,size)
 moves=move(curr.mutations.moveType,curr.t,curr)
+curr.life-=(moves.x+moves.y)
 //start lookin for the other ants
   const gridX = Math.floor(curr.x / cellSize);
     const gridY = Math.floor(curr.y / cellSize);
@@ -279,7 +292,9 @@ b=(30000-curr.life)/3000
 grey=mean([curr.c1,curr.c2,curr.c3])
 
 ctx.fillStyle = assembleRGB(curr.c1 - (curr.c1-grey)/b,curr.c2 - (curr.c2-grey)/b,curr.c3 - (curr.c3-grey)/b)
-ctx.fillRect(Math.round(curr.x),Math.round(curr.y),1,1)
+size=settings.antSize
+ctx.fillRect(Math.round(curr.x),Math.round(curr.y),size,size)
+
 }
 }
 
@@ -307,9 +322,11 @@ if (forceType){c2.mutations.moveType=forceType}
 nx=0
 ny=0
 nt=0
+moveType=c2.mutations.moveType
+if (settings.facsDetermineBehavior){moveType=curr.faction.behavior}
 tDir=(pointAt(c2.behavior.target.x,c2.behavior.target.y,c2.x,c2.y)/(Math.PI/180))*Math.sign(curr.behavior.target.amnt)
 //console.log(tDir,c2.behavior.target)
-if (c2.mutations.moveType==-1||!c2.mutations.moveType||c2.mutations.moveType==0){//type 0 -random direction
+if (moveType==-1||!moveType||moveType==0){//type 0 -random direction
 
 curr.t=tDir+random(-Math.abs(curr.acc),Math.abs(curr.acc))
 
@@ -319,7 +336,7 @@ nx = Math.sin(curr.t)*rDist
 ny = Math.cos(curr.t)*rDist
 
 }
-if (c2.mutations.moveType==1){//type 1 -shots
+if (moveType==1){//type 1 -shots
 
 curr.t+=random(-0.1,0.1,0)+(Math.sign(curr.t-tDir)/100)
 rDist=random(0,0.1,0)
@@ -327,18 +344,23 @@ nx = Math.sin(c2.t)*rDist
 ny = Math.cos(c2.t)*rDist
 
 }
-if (c2.mutations.moveType==2){//type 2 -dither
+if (moveType==2){//type 2 -dither
 
 nx=Math.sign(random(-1,1,0))
 ny=Math.sign(random(-1,1,0))
 }
-if (c2.mutations.moveType==3){//type 3 -fill
+if (moveType==3){//type 3 -fill
 if ((gt+c2.born)%100==random(50,65)){
 curr.t+=random(-90,90,0)+(Math.sign(curr.t-tDir)/100)
 }
 rDist=random(0,0.5,0)
 nx = Math.sin(c2.t)*rDist
 ny = Math.cos(c2.t)*rDist
+}
+if (moveType==4){//type 3 -fill
+nx = random(-10,10)
+ny = random(-10,10)
+	
 }
 
 
