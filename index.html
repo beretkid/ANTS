@@ -1,18 +1,23 @@
 <body style="background-color: black;"></body>
-
+<image style="z-index:10;position:absolute;border:2px indent; top:%50;left:%50;"src="title.png"id="title"></image>
 <canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas>
-<div id="menu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:10px;">
-<div id="menu2" hidden style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:10px;">
-<text id="fps">defps</text>
+<div hidden id="menu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:10px;">
+<div hidden id="moveEditor" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:60%;">
+<text>X Formula</text><input type="text" id="moveTextX">
 <div></div>
-
+<text>Y Formula</text><input type="text" id="moveTextY">
+<div></div>
+<button onClick="updateCmove()">Update Movesets</button>
 </div>
-
 </div>
 <head>
   <title>ANTS</title>
 <link rel="icon" type="image/png" href="favicon.png">
 </head>
+<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:0%; background-color:red" id="keepWatching"onClick="keepWatching()">Keep Watching Current Canvas</button>
+<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="newCanvasButton"onClick="initalNewCanvas()">New Canvas</button>
+<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="startButton" hidden  onClick="startCanvas()">Send in the ANTS!</button>
+<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="startButton" hidden  onClick="startCanvas()">Send in the ANTS!</button>
 <script>
 canvas = document.getElementById('visuals');
   ctx = canvas.getContext("2d",{ willReadFrequently: true });
@@ -26,16 +31,35 @@ var w = canvas.width;
 var h = canvas.height;
 var entities = []
 var food = []
-var treeColor = "rgb(155,0,0)"
-var treeHighlight = "rgb(185,0,0)"
-var i1
+
 var allowskipping = true
 var foodCount = 0
 var totalAnts=0
 var zSize=10
+var moveEditor=document.getElementById("moveEditor")
 var menu=document.getElementById("menu")
+var title=document.getElementById("title")
+var startButton=document.getElementById("startButton")
+var startNewButton=document.getElementById("newCanvasButton")
 const mod = (n, m) => ((n % m) + m) % m;
+var customX = (x,y) => (random(-1,1));
+var customY = (x,y) => (random(-1,1));
+
 const mean = (l) => l.reduce((a, b) => a + b, 0) / l.length;
+function keepWatching() {
+document.getElementById("keepWatching").hidden=true
+startButton.hidden=true
+startNewButton.hidden=true
+menu.hidden=true
+title.hidden = true
+
+}
+function initalNewCanvas() {
+menu.hidden=false
+title.hidden=true
+startButton.hidden=false
+
+}
 function hexToRgb(hex) {
   // Remove the hash if it exists
   hex = hex.replace(/^#/, '');
@@ -116,9 +140,50 @@ function updateSpatialMap() {
         spatialMap.get(key).push(ant);
     }
 }
+typing=false
+const formEditX=document.getElementById("moveTextX")
+const formEditY=document.getElementById("moveTextY")
+formEditX.addEventListener('blur', () => {typing=false})
+formEditX.addEventListener('focus', () => {typing=true})
+formEditY.addEventListener('blur', () => {typing=false})
+formEditY.addEventListener('focus', () => {typing=true})
+function updateCmove() {
+newXForm=String(document.getElementById("moveTextX").value)
+newYForm=String(document.getElementById("moveTextY").value)
+console.log(newXForm)
+try {
+customX=eval("(x,y) => "+newXForm)
+customY=eval("(x,y) => "+newYForm)
+}
+catch (error) {
+    console.error("Invalid JS!");
+	 
+  }
+console.log(customX)
+}
+function startCanvas() {
+clearCanvas()
+startButton.hidden=true
+menu.hidden=true
+startNewButton.hidden=true
+document.getElementById("keepWatching").hidden=true
+//Plant the seeds of poopshittery (real)
+factions=[]
+for (let i = 0; i < settings.startingAnts; i++) {
+rx=random(0,w)
+ry=random(0,h)
+fac=factions.push({ants:0,targ:{x:rx,y:ry},behavior:random(0,settings.mutations)})
+console.log(fac,factions[i])
+birthAnt(factions[i],rx,ry)
+}
+}
+function clearCanvas(){
+entities.length=0
 
+ctx.clearRect(0,0,w,h)
+}
 function tick() {
-
+if (entities.length>0){
 //Wordgen
 
 updateSpatialMap()
@@ -148,6 +213,7 @@ antBrain(curr)
 }
 entities = entities.filter((ent) => !ent.remove);
 }
+}
 
 settings = {fadeAmount:1,showAnts:false,doubleTap:true,startingAnts:18,mutations:5,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeStages:5,forceType:0,grainyBackground:false,grainAmnt:10,facsDetermineBehavior:false,antSize:1}
 //make settings button
@@ -176,7 +242,7 @@ if (event.target.type=="checkbox"){settings[event.target.ref]=!!event.target.che
 }
 ctx.fillStyle=settings.bColor
 ctx.fillRect(0,0,w,h)
-//PLant the seeds of poopshittery
+//Plant the seeds of poopshittery (real)
 factions=[]
 for (let i = 0; i < settings.startingAnts; i++) {
 rx=random(0,w)
@@ -206,13 +272,13 @@ diff=((tickDelay-tdSlow)/100)
 tdSlow=tdSlow+Math.max(Math.min(Math.abs(diff),10),0.1)*Math.sign(diff)
 if ((gt%10)==5){}
 
-document.getElementById("fps").innerText="DPT: "+Math.round(tdSlow)+"/"+settings.gameSpeed+"ms"
+
 tickRepeat()
 },settings.gameSpeed)
 }
 document.addEventListener('keydown',function (e){
 console.log(e)
-if (e.keyCode==77){menu.hidden=!menu.hidden}
+if (e.keyCode==77&&!typing){menu.hidden=!menu.hidden;moveEditor.hidden=menu.hidden}
 
 })
 var gameSpeed=0
@@ -288,7 +354,7 @@ curr.visited.push({x:Math.round(curr.x/zSize)*zSize,y:Math.round(curr.y/zSize)*z
 
 curr.life-= 3+(totalAnts/100)
 if (settings.showAnts) {//draw the ant itself
-b=(30000-curr.life)/3000
+b=1000000
 grey=mean([curr.c1,curr.c2,curr.c3])
 
 ctx.fillStyle = assembleRGB(curr.c1 - (curr.c1-grey)/b,curr.c2 - (curr.c2-grey)/b,curr.c3 - (curr.c3-grey)/b)
@@ -300,12 +366,15 @@ ctx.fillRect(Math.round(curr.x),Math.round(curr.y),size,size)
 
 function birthAntFromParent(parent) {
 nMuta=structuredClone(parent.mutations)
+nColor=structuredClone(parent)
 for (i2 in nMuta) {
 cMuta=nMuta[i2]
 if (!random(-10,10)){nMuta[i2]=mod(nMuta[i2]+random(-1,1),settings.mutations)}
 }
-
-birthAnt(parent.faction,parent.x,parent.y,parent.c1+random(-1,1),parent.c2+random(-1,1),parent.c3+random(-1,1),parent.t,nMuta)
+if (!random(-10,10)){nColor.c1=nColor.c1+random(-10,10)}
+if (!random(-10,10)){nColor.c2=nColor.c2+random(-10,10)}
+if (!random(-10,10)){nColor.c3=nColor.c3+random(-10,10)}
+birthAnt(parent.faction,parent.x,parent.y,nColor.c1,nColor.c2,nColor.c3,parent.t,nMuta)
 }
 acc=120
 function pointAt(startX, startY, targetX, targetY,o) {
@@ -357,9 +426,9 @@ rDist=random(0,0.5,0)
 nx = Math.sin(c2.t)*rDist
 ny = Math.cos(c2.t)*rDist
 }
-if (moveType==4){//type 3 -fill
-nx = random(-10,10)
-ny = random(-10,10)
+if (moveType==4){//type 4 - Custom
+nx = customX(c2.x,c2.y)
+ny = customY(c2.x,c2.y)
 	
 }
 
