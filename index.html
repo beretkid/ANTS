@@ -7,6 +7,8 @@
 <div></div>
 <text>Y Formula</text><input type="text" id="moveTextY">
 <div></div>
+<text>(Optional) Value Formula</text><input type="text" id="moveTextV">
+<div></div>
 <button onClick="updateCmove()">Update Movesets</button>
 </div>
 </div>
@@ -44,7 +46,10 @@ var startNewButton=document.getElementById("newCanvasButton")
 const mod = (n, m) => ((n % m) + m) % m;
 var customX = (x,y) => (random(-1,1));
 var customY = (x,y) => (random(-1,1));
-
+var customV = (x,y) => (random(-1,1));
+const sin = (n) => Math.sin(n)
+const cos = (n) => Math.cos(n)
+const tan = (n) => Math.tan(n)
 const mean = (l) => l.reduce((a, b) => a + b, 0) / l.length;
 function keepWatching() {
 document.getElementById("keepWatching").hidden=true
@@ -117,10 +122,10 @@ if (snap<0||snap==0){
 function assembleRGB(r1,r2,r3) {
 return "rgb(" + r1 + ", " + r2+ ", " + r3 + ")"
 }
-function birthAnt(faction,x=random(0,w),y=random(0,h),c1=random(0,225),c2=random(0,225),c3=random(0,225),t=0,mutations={moveType:0}) {
+function birthAnt(faction,x=random(0,w),y=random(0,h),c1=random(0,225),c2=random(0,225),c3=random(0,225),t=0,mutations={moveType:0},value=1) {
 faction.ants+=1
 totalAnts+=1
-entities.push({faction:faction,x:x,y:y,c1:c1,c2:c2,c3:c3,life:random(7500,30000),food:false,lastrng:50,food:10000,t:t,mutations:mutations,visited:[],reinforced:0,alt:false,born:gt,behavior:{target:{x:x,y:y,amnt:1},bType:0},acc:120})
+entities.push({faction:faction,x:x,y:y,c1:c1,c2:c2,c3:c3,life:random(7500,30000),food:false,lastrng:50,food:10000,t:t,mutations:mutations,visited:[],reinforced:0,alt:false,born:gt,value:value,behavior:{target:{x:x,y:y,amnt:1},bType:0},acc:120})
 
 
 }
@@ -143,17 +148,23 @@ function updateSpatialMap() {
 typing=false
 const formEditX=document.getElementById("moveTextX")
 const formEditY=document.getElementById("moveTextY")
+const formEditV=document.getElementById("moveTextV")
 formEditX.addEventListener('blur', () => {typing=false})
 formEditX.addEventListener('focus', () => {typing=true})
 formEditY.addEventListener('blur', () => {typing=false})
 formEditY.addEventListener('focus', () => {typing=true})
+formEditV.addEventListener('blur', () => {typing=false})
+formEditV.addEventListener('focus', () => {typing=true})
 function updateCmove() {
 newXForm=String(document.getElementById("moveTextX").value)
 newYForm=String(document.getElementById("moveTextY").value)
+newVForm=String(document.getElementById("moveTextV").value)
+if (newVForm.split('').length==0){newVForm="0";console.log("changed m")}
 console.log(newXForm)
 try {
-customX=eval("(x,y) => "+newXForm)
-customY=eval("(x,y) => "+newYForm)
+customX=eval("(x,y,v) => "+newXForm)
+customY=eval("(x,y,v) => "+newYForm)
+customV=eval("(x,y,v) => "+newVForm)
 }
 catch (error) {
     console.error("Invalid JS!");
@@ -279,7 +290,12 @@ tickRepeat()
 document.addEventListener('keydown',function (e){
 console.log(e)
 if (e.keyCode==77&&!typing){menu.hidden=!menu.hidden;moveEditor.hidden=menu.hidden}
-
+if (e.keyCode==78&&!typing){
+document.getElementById("keepWatching").hidden=false
+startButton.hidden=true
+startNewButton.hidden=false
+title.hidden = false
+}
 })
 var gameSpeed=0
 function antBrain(curr) {
@@ -293,6 +309,7 @@ curr.acc=120
 size=settings.antSize
 ctx.fillRect(Math.round(curr.x),Math.round(curr.y),size,size)
 moves=move(curr.mutations.moveType,curr.t,curr)
+curr.value=moves.value
 curr.life-=(moves.x+moves.y)
 //start lookin for the other ants
   const gridX = Math.floor(curr.x / cellSize);
@@ -374,7 +391,7 @@ if (!random(-10,10)){nMuta[i2]=mod(nMuta[i2]+random(-1,1),settings.mutations)}
 if (!random(-10,10)){nColor.c1=nColor.c1+random(-10,10)}
 if (!random(-10,10)){nColor.c2=nColor.c2+random(-10,10)}
 if (!random(-10,10)){nColor.c3=nColor.c3+random(-10,10)}
-birthAnt(parent.faction,parent.x,parent.y,nColor.c1,nColor.c2,nColor.c3,parent.t,nMuta)
+birthAnt(parent.faction,parent.x,parent.y,nColor.c1,nColor.c2,nColor.c3,parent.t,nMuta,parent.value)
 }
 acc=120
 function pointAt(startX, startY, targetX, targetY,o) {
@@ -391,6 +408,7 @@ if (forceType){c2.mutations.moveType=forceType}
 nx=0
 ny=0
 nt=0
+nv=0
 moveType=c2.mutations.moveType
 if (settings.facsDetermineBehavior){moveType=curr.faction.behavior}
 tDir=(pointAt(c2.behavior.target.x,c2.behavior.target.y,c2.x,c2.y)/(Math.PI/180))*Math.sign(curr.behavior.target.amnt)
@@ -427,15 +445,15 @@ nx = Math.sin(c2.t)*rDist
 ny = Math.cos(c2.t)*rDist
 }
 if (moveType==4){//type 4 - Custom
-nx = customX(c2.x,c2.y)
-ny = customY(c2.x,c2.y)
-	
+nx = customX(c2.x,c2.y,c2.value)
+ny = customY(c2.x,c2.y,c2.value)
+nv = customV(c2.x,c2.y,c2.value)
 }
 
 
 
 
-return {x:nx,y:ny,t:nt}
+return {x:nx,y:ny,t:nt,value:nv}
 }
  tickRepeat()
 </script>
