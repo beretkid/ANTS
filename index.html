@@ -1,24 +1,72 @@
 <body style="background-color: black;"></body>
+
 <image style="z-index:10;position:absolute;border:2px indent; top:%50;left:%50;"src="title.png"id="title"></image>
 <canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas>
+<div hidden id="helpMenu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:0%;left:50%;">
+<text>"What the hell is this???"</text>
+<div></div>
+<text>This is the menu for inputting your very own custom behaviors!</text>
+<div></div>
+<text>It works by simply running things inputted here as javascript--Don't worrry if you don't know any!</text>
+
+<div>
+<text>Its very simplified, and has even premade functions that are listed later below.</text>
+</div>
+<div></div>
+<br>
+<div>
+<text>The X & Y Fields is what it ADDS every frame</text>
+</div>
+<div></div>
+<text>The Optional V Field works as a custom variable like a direction, it is what it gets SET to every frame</text>
+<div></div>
+<text>Heres an list of all the functions and variables: </text>
+<div></div>
+<br>
+<text>sin(value), Cos(value), and tan(value) -- self explanitory i hope</text>
+<div></div>
+<text>random(min,max) --  also hopefully self explanitory</text>
+<div></div>
+<text>mod(value,modulus) -- Modulo, basicly loops back to zero if value exeeds modulus.</text>
+<div></div>
+<text>t -- the age of the current ANT; goes up every frame, and goes well with sin and cos!</text>
+<div></div>
+<text>x, y, v -- I really hope you know what the first two are, as for V please move your eyeballs up a bit.</text>
+
+
+<div></div>
+<br>
+<text>Remember that this IS running javascript, so you can actully just write most valid js like Math and sutch!</text>
+<div></div>
+<text>ALSO REALLY IMPORTANT NOTE!!! none of this is capitalized at all don't ever capitalize anything in the codes!</text>
+<div></div>
+<text>Baicly avoid caps lock like the plauge, and dont ever use any capitalized letters in the code.</text>
+<div></div>
+
+<div>
+<text>Note: floats (numbers with decimals) are supported, but visualy will be rounded eg: 3.14 will look like 3, if that helps.</text>
+</div>
+</div>
 <div hidden id="menu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:10px;">
 <div hidden id="moveEditor" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:60%;">
+<button onClick="toggleCustomHelp()">???</button>
+<div></div>
 <text>X Formula</text><input type="text" id="moveTextX">
 <div></div>
 <text>Y Formula</text><input type="text" id="moveTextY">
 <div></div>
 <text>(Optional) Value Formula</text><input type="text" id="moveTextV">
 <div></div>
-<button onClick="updateCmove()">Update Movesets</button>
+<button onClick="updateCmove()">Update Movesets</button><button onClick="importCustom()">↓</button><button onClick="exportCustom()">↑</button><button onClick="genRandomMaths()">generate Random</button>
 </div>
 </div>
 <head>
   <title>ANTS</title>
-<link rel="icon" type="image/png" href="favicon.png">
+
+<link rel="icon" type="image/x-icon" href="favicon.png">
 </head>
 <button style="z-index:10;position:absolute;border:2px indent; top:70%;left:0%; background-color:red" id="keepWatching"onClick="keepWatching()">Keep Watching Current Canvas</button>
 <button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="newCanvasButton"onClick="initalNewCanvas()">New Canvas</button>
-<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="startButton" hidden  onClick="startCanvas()">Send in the ANTS!</button>
 <button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="startButton" hidden  onClick="startCanvas()">Send in the ANTS!</button>
 <script>
 canvas = document.getElementById('visuals');
@@ -33,7 +81,7 @@ var w = canvas.width;
 var h = canvas.height;
 var entities = []
 var food = []
-
+var stats = {antsBorn:0,antsDied:0,antsKilledInAction:0,antsLiving:0}
 var allowskipping = true
 var foodCount = 0
 var totalAnts=0
@@ -43,13 +91,21 @@ var menu=document.getElementById("menu")
 var title=document.getElementById("title")
 var startButton=document.getElementById("startButton")
 var startNewButton=document.getElementById("newCanvasButton")
+const thres = (n,m) => Math.max(n,m)-m
 const mod = (n, m) => ((n % m) + m) % m;
+const round = (n) => Math.round(n);
+const floor = (n) => Math.floor(n);
+const Max = (n,m) => Math.max(n,m);
+const Min = (n,m) => Math.min(n,m);
+const limit = (n) => Math.min((n-Math.max(n,1)*0.9)+0.9,2); // used to limit the value of random styles
+
 var customX = (x,y) => (random(-1,1));
 var customY = (x,y) => (random(-1,1));
 var customV = (x,y) => (random(-1,1));
 const sin = (n) => Math.sin(n)
 const cos = (n) => Math.cos(n)
 const tan = (n) => Math.tan(n)
+const pow = (n,l) => Math.pow(n,l)
 const mean = (l) => l.reduce((a, b) => a + b, 0) / l.length;
 function keepWatching() {
 document.getElementById("keepWatching").hidden=true
@@ -59,11 +115,63 @@ menu.hidden=true
 title.hidden = true
 
 }
-function initalNewCanvas() {
+function initalNewCanvas(contents) {
 menu.hidden=false
 title.hidden=true
 startButton.hidden=false
 
+}
+function getRandom(list){
+return list[random(0,list.length-1)]
+}
+function generateRandomMath() {//important!! this is NOT an random number generator! this is generating new custom movetypes for mutations!
+bigFunc=[]
+funcAmount=random(1,4)
+for (let i = 0; i < funcAmount ; i++) {
+bigFunc.push(getRandMathBlock())
+}
+bigFunc=bigFunc.join("&")
+if (bigFunc.match(/&/g)){
+a=bigFunc.match(/&/g).length;
+}else a=0
+
+for (let i3 = 0; i3 < a ; i3++) {
+bigFunc=bigFunc.replace("&", getRandom(randomOperators));
+
+
+}
+return bigFunc
+}
+function getRandMathBlock(inset=0) {
+if (!random(-1,1)) {
+func=randomFuncs[random(0,randomFuncs.length-1)]
+argCount=Number(func.charAt(func.indexOf("[")+1))
+args=[]
+safe=func.includes('!')
+for (let i2 = 0; i2 < argCount ; i2++) {
+
+args.push(getRandMathBlock(inset+1))
+
+}
+r = (func.slice(0,func.indexOf("["))+"("+args.join(',')+")").replace('!','')
+}else {
+r = getRandom(randomVariables)
+}
+return r
+
+}
+
+//note! adding $ should make it so it makes sure the first entry is lower than the second!
+//also make it so custom movetypes are induvisual.
+// the '!' is a tag that signifies wether this should NOT be used as a final output.
+//sin is safe because it only outputs -1 - 1 but things like pow and tan are not.
+const randomFuncs = "sin[1 cos[1 !tan[1 !pow[2 [1 random[2 Min[2 round[1 Max[2".split(' ')
+const randomVariables = "t v random(-1,1)".split(' ')
+const randomOperators = "- + / * %".split(' ')
+function blindEval(code, scope={}) { // basicly eval but we crippled its knees and blinded it for life!
+
+  const thingy = new Function ('sandbox',`with(sandbox) {return eval("${code}")}`)
+  return thingy.call(scope, scope)
 }
 function hexToRgb(hex) {
   // Remove the hash if it exists
@@ -79,10 +187,15 @@ function hexToRgb(hex) {
 function slowDarken(color,amnt) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
+	 splits=Number(10)
+	fadeStart=Number(4)
+	fadeEnd=fadeStart+splits
 	 jump=4
 	 amount=settings.fadeAmount
-	 start=0
-    for (let i = start; i < data.length; i += jump) {
+	 over=(gt%fadeEnd+1)-fadeStart //1-4
+	 l=((data.length/4)*4)
+	 start=l*(over-1)
+    for (let i = start; i-start < l; i += jump) {
 	 
         data[i] -= Math.sign(data[i]-color.r)*amnt   // Red
         data[i+1] -= Math.sign(data[i+1]-color.g)*amnt    // Green
@@ -99,7 +212,14 @@ function slowDarken(color,amnt) {
     }
     ctx.putImageData(imageData, 0, 0);
 }
-
+function genRandomMaths () {
+formEditX.value = generateRandomMath()
+formEditY.value = generateRandomMath()
+formEditV.value = generateRandomMath()
+}
+function toggleCustomHelp() {
+document.getElementById("helpMenu").hidden = !document.getElementById("helpMenu").hidden
+}
 function random(min, max,snap) {
 
 if (snap==undefined){
@@ -122,10 +242,22 @@ if (snap<0||snap==0){
 function assembleRGB(r1,r2,r3) {
 return "rgb(" + r1 + ", " + r2+ ", " + r3 + ")"
 }
-function birthAnt(faction,x=random(0,w),y=random(0,h),c1=random(0,225),c2=random(0,225),c3=random(0,225),t=0,mutations={moveType:0},value=1) {
+function generateNewMovestyle () {
+mx="(x,y,v,t) => "+generateRandomMath()
+my="(x,y,v,t) => "+generateRandomMath()
+mv="(x,y,v,t) => "+generateRandomMath()
+return {x:blindEval(mx),y:blindEval(my),v:blindEval(mv),mx:mx,my:my,mv:mv}
+}
+
+
+
+
+function birthAnt(faction,x=random(0,w),y=random(0,h),c1=random(0,225),c2=random(0,225),c3=random(0,225),t=0,mutations={moveType:0},value=1,moveStyle=generateNewMovestyle()) {
 faction.ants+=1
 totalAnts+=1
-entities.push({faction:faction,x:x,y:y,c1:c1,c2:c2,c3:c3,life:random(7500,30000),food:false,lastrng:50,food:10000,t:t,mutations:mutations,visited:[],reinforced:0,alt:false,born:gt,value:value,behavior:{target:{x:x,y:y,amnt:1},bType:0},acc:120})
+stats.antsBorn+=1
+stats.antsLiving+=1
+entities.push({faction:faction,x:x,y:y,c1:c1,c2:c2,c3:c3,life:random(7500,30000),ox:x,oy:y,food:false,lastrng:50,food:10000,t:t,mutations:mutations,visited:[],reinforced:0,alt:false,born:gt,value:value,behavior:{target:{x:x,y:y,amnt:1},bType:0},acc:120,moveStyle:moveStyle})
 
 
 }
@@ -155,6 +287,18 @@ formEditY.addEventListener('blur', () => {typing=false})
 formEditY.addEventListener('focus', () => {typing=true})
 formEditV.addEventListener('blur', () => {typing=false})
 formEditV.addEventListener('focus', () => {typing=true})
+async function exportCustom() {
+saves=[formEditX.value,formEditY.value,formEditV.value].join("|&")
+await navigator.clipboard.writeText(saves);
+}
+async function importCustom() {
+
+text = await navigator.clipboard.readText();
+fields=text.split("|&")
+formEditX.value=fields[0]
+formEditY.value=fields[1]
+formEditV.value=fields[2]
+}
 function updateCmove() {
 newXForm=String(document.getElementById("moveTextX").value)
 newYForm=String(document.getElementById("moveTextY").value)
@@ -162,9 +306,11 @@ newVForm=String(document.getElementById("moveTextV").value)
 if (newVForm.split('').length==0){newVForm="0";console.log("changed m")}
 console.log(newXForm)
 try {
-customX=eval("(x,y,v) => "+newXForm)
-customY=eval("(x,y,v) => "+newYForm)
-customV=eval("(x,y,v) => "+newVForm)
+for (i in entities)
+entities[i].moveStyle.x=blindEval("(x,y,v,t) => "+newXForm)
+entities[i].moveStyle.y=blindEval("(x,y,v,t) => "+newYForm)
+entities[i].moveStyle.v=blindEval("(x,y,v,t) => "+newVForm)
+console.log(entities[i].movesStyle)
 }
 catch (error) {
     console.error("Invalid JS!");
@@ -196,7 +342,11 @@ ctx.clearRect(0,0,w,h)
 function tick() {
 if (entities.length>0){
 //Wordgen
+if (settings.oneAnt){
+entities.length=1
+entities[0].life=1000000
 
+}
 updateSpatialMap()
 if (settings.erode){
 rng=random(100,1000)
@@ -208,9 +358,10 @@ ctx.fillRect(random(0,w),random(0,h),1,1)
 }
 ctx.globalAlpha = 1;
 }
-if (settings.fade&&gt%10==5){
-ctx.fillStyle=settings.bColor
-ctx.globalAlpha = settings.fadeAmount;
+fadeSpeed=Number(settings.fadeSpeed)
+fadeStart=fadeSpeed-4
+if (settings.fade&&(gt%fadeSpeed)>fadeStart){
+
 slowDarken(hexToRgb(settings.bColor),settings.fadeAmount)
 
 }
@@ -226,7 +377,7 @@ entities = entities.filter((ent) => !ent.remove);
 }
 }
 
-settings = {fadeAmount:1,showAnts:false,doubleTap:true,startingAnts:18,mutations:5,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeStages:5,forceType:0,grainyBackground:false,grainAmnt:10,facsDetermineBehavior:false,antSize:1}
+settings = {fadeAmount:3,showAnts:false,doubleTap:true,startingAnts:18,mutations:5,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,forceType:0,grainyBackground:false,grainAmnt:10,facsDetermineBehavior:false,antSize:1,violentAnts:true,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1}
 //make settings button
 for (i in settings) {
 newDiv = document.createElement('div')
@@ -249,10 +400,14 @@ if (type == 'string'){newButt.type="color";}
 newButt.addEventListener('input', (evnt) => {
 settings[event.target.ref]=event.target.value
 if (event.target.type=="checkbox"){settings[event.target.ref]=!!event.target.checked}
+if (event.target.type=="number"){settings[event.target.ref]=Number(event.target.value)}
 })
 }
 ctx.fillStyle=settings.bColor
+
+
 ctx.fillRect(0,0,w,h)
+
 //Plant the seeds of poopshittery (real)
 factions=[]
 for (let i = 0; i < settings.startingAnts; i++) {
@@ -307,7 +462,10 @@ curr.behavior.target.amnt=1
 curr.acc=120
 }
 size=settings.antSize
+if (settings.forceColor){ctx.fillStyle = settings.colorToForce}
+if(!settings.useLines){
 ctx.fillRect(Math.round(curr.x),Math.round(curr.y),size,size)
+}
 moves=move(curr.mutations.moveType,curr.t,curr)
 curr.value=moves.value
 curr.life-=(moves.x+moves.y)
@@ -320,18 +478,24 @@ for (let x = -1; x <= 1; x++) {
             const key = `${gridX + x},${gridY + y}`;
             const neighbors = spatialMap.get(key);
 
-            if (neighbors) {
+            if (neighbors&& settings.violentAnts) {
                 for (let other of neighbors) {
                     if (curr === other) continue; // Don't touch yourself (weirdo)
                     
                     // Epic swag inter-ant shennanigans
+						  
                     let dx = curr.x - other.x;
                     let dy = curr.y - other.y;
                     let distSq = dx*dx + dy*dy;
                     
-                    if (distSq < 4&&curr.faction!==other.faction&&!random(-5,5)) { // Ant on ant violence, but only if you are a different r--			
+                    if (distSq < 4&&curr.faction!==other.faction&&!random(-2,2)) { // Ant on ant violence, but only if you are a different r--			
 						  
-						  other.life-=1000
+						  other.remove = true
+						  stats.antsKilledInAction+=1
+						  stats.antsLiving=entities.length
+						  stats.antsDied+=1
+						  ctx.fillStyle="red"
+						  ctx.fillRect(curr.x,curr.y,1,1)
                         
                         
                     }
@@ -348,8 +512,38 @@ for (let x = -1; x <= 1; x++) {
 	 }
 
 if (random(0,1000)==500){birthAntFromParent(curr);curr.life-=100}
-curr.x=mod(curr.x+moves.x,w)
-curr.y=mod(curr.y+moves.y,h)
+//add the new movement
+curr.ox=curr.x
+curr.oy=curr.y
+draw=true
+
+if (curr.x+moves.x>w||curr.y+moves.y>h||curr.x+moves.x<0||curr.y+moves.y<0) {
+draw=false
+if (curr.x+moves.x>w){curr.ox = 0}
+if (curr.x+moves.x>0){curr.ox = w}
+if (curr.y+moves.y>h){curr.oy = 0}
+if (curr.y+moves.y>0){curr.oy = h}
+}
+
+curr.x=mod(curr.x+moves.x,w+1)
+curr.y=mod(curr.y+moves.y,h+1)
+
+if (settings.useLines&&Math.abs(curr.oy-curr.y)<10) {
+				g=random(-settings.drawGrain,settings.drawGrain)
+				ctx.strokeStyle = assembleRGB(curr.c1+g,curr.c2+g,curr.c3+g)
+				if (settings.forceColor){ctx.strokeStyle=settings.colorToForce}
+				ctx.beginPath();
+				ctx.moveTo(Math.round(curr.ox), Math.round(curr.oy)); 
+				drawX=curr.x
+				drawY=curr.y
+
+				
+				ctx.lineTo(drawX,drawY);
+				
+				ctx.stroke(); // Render the path
+				ctx.closePath();
+
+}
 
 //tile visiting shenanagins
 newTileFound=true
@@ -374,8 +568,9 @@ if (settings.showAnts) {//draw the ant itself
 b=1000000
 grey=mean([curr.c1,curr.c2,curr.c3])
 
-ctx.fillStyle = assembleRGB(curr.c1 - (curr.c1-grey)/b,curr.c2 - (curr.c2-grey)/b,curr.c3 - (curr.c3-grey)/b)
+if (!settings.forceColor){ctx.fillStyle = assembleRGB(curr.c1 - (curr.c1-grey)/b,curr.c2 - (curr.c2-grey)/b,curr.c3 - (curr.c3-grey)/b)}
 size=settings.antSize
+
 ctx.fillRect(Math.round(curr.x),Math.round(curr.y),size,size)
 
 }
@@ -383,15 +578,32 @@ ctx.fillRect(Math.round(curr.x),Math.round(curr.y),size,size)
 
 function birthAntFromParent(parent) {
 nMuta=structuredClone(parent.mutations)
-nColor=structuredClone(parent)
+nColor=structuredClone({c1:parent.c1,c2:parent.c2,c3:parent.c3})
 for (i2 in nMuta) {
 cMuta=nMuta[i2]
-if (!random(-10,10)){nMuta[i2]=mod(nMuta[i2]+random(-1,1),settings.mutations)}
+if (!random(-4,4)){nMuta[i2]=mod(nMuta[i2]+random(-1,1),settings.mutations)}
 }
-if (!random(-10,10)){nColor.c1=nColor.c1+random(-10,10)}
-if (!random(-10,10)){nColor.c2=nColor.c2+random(-10,10)}
-if (!random(-10,10)){nColor.c3=nColor.c3+random(-10,10)}
-birthAnt(parent.faction,parent.x,parent.y,nColor.c1,nColor.c2,nColor.c3,parent.t,nMuta,parent.value)
+if (!random(-4,4)){nColor.c1=nColor.c1+random(-10,10)}
+if (!random(-4,4)){nColor.c2=nColor.c2+random(-10,10)}
+if (!random(-4,4)){nColor.c3=nColor.c3+random(-10,10)}
+
+if (typeof parent.moveStyle == "object"){
+premm=parent.moveStyle
+
+
+
+mm=structuredClone({mx:premm.mx,my:premm.my,mv:premm.mv})
+
+for (i2 in mm) {
+if (!random(-10,10)){
+mm[i2]="(x,y,v,t) => "+generateRandomMath()
+}
+}
+ms = {x:blindEval(mm.mx),
+y:blindEval(mm.my),
+v:blindEval(mm.mv),mx:mm.mx,my:mm.my,mv:mm.mv}
+}
+birthAnt(parent.faction,parent.x,parent.y,nColor.c1,nColor.c2,nColor.c3,parent.t,nMuta,parent.value,ms)
 }
 acc=120
 function pointAt(startX, startY, targetX, targetY,o) {
@@ -413,46 +625,22 @@ moveType=c2.mutations.moveType
 if (settings.facsDetermineBehavior){moveType=curr.faction.behavior}
 tDir=(pointAt(c2.behavior.target.x,c2.behavior.target.y,c2.x,c2.y)/(Math.PI/180))*Math.sign(curr.behavior.target.amnt)
 //console.log(tDir,c2.behavior.target)
-if (moveType==-1||!moveType||moveType==0){//type 0 -random direction
 
-curr.t=tDir+random(-Math.abs(curr.acc),Math.abs(curr.acc))
 
-rDist=random(0,curr.behavior.target.amnt,0)
+nx = limit(c2.moveStyle.x(c2.x,c2.y,c2.value,gt-c2.born))
+ny = limit(c2.moveStyle.y(c2.x,c2.y,c2.value,gt-c2.born))
+nv = limit(c2.moveStyle.v(c2.x,c2.y,c2.value,gt-c2.born))
 
-nx = Math.sin(curr.t)*rDist
-ny = Math.cos(curr.t)*rDist
 
+
+if (isNaN(nx)){nx=0}
+if (isNaN(ny)){ny=0}
+if (settings.capSpeed){
+speedcap=1
+nx = Math.max(Math.min(nx,speedcap),-speedcap)
+ny = Math.max(Math.min(ny,speedcap),-speedcap)
 }
-if (moveType==1){//type 1 -shots
-
-curr.t+=random(-0.1,0.1,0)+(Math.sign(curr.t-tDir)/100)
-rDist=random(0,0.1,0)
-nx = Math.sin(c2.t)*rDist
-ny = Math.cos(c2.t)*rDist
-
-}
-if (moveType==2){//type 2 -dither
-
-nx=Math.sign(random(-1,1,0))
-ny=Math.sign(random(-1,1,0))
-}
-if (moveType==3){//type 3 -fill
-if ((gt+c2.born)%100==random(50,65)){
-curr.t+=random(-90,90,0)+(Math.sign(curr.t-tDir)/100)
-}
-rDist=random(0,0.5,0)
-nx = Math.sin(c2.t)*rDist
-ny = Math.cos(c2.t)*rDist
-}
-if (moveType==4){//type 4 - Custom
-nx = customX(c2.x,c2.y,c2.value)
-ny = customY(c2.x,c2.y,c2.value)
-nv = customV(c2.x,c2.y,c2.value)
-}
-
-
-
-
+nv=nv%Number.MAX_SAFE_INTEGER
 return {x:nx,y:ny,t:nt,value:nv}
 }
  tickRepeat()
