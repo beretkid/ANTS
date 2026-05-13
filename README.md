@@ -1,3 +1,5 @@
+![Cool Preview Image](https://github.com/beretkid/ANTS/blob/main/git/download%20-%202026-05-13T141326.372.png)
+
 ANTS, why do they draw on a weird canvas doohicky?? i don't know! but you have an ungodly amount of them, so you might as well make them scribble all over something!
 
 FAQ:
