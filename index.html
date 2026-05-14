@@ -1,5 +1,5 @@
 <body style="background-color: black;"></body>
-
+<image style="z-index:10;position:absolute;border:2px indent;width:10%;height:10%;top:%90;left:%90;"src="settings.png"id="TouchButton" hidden></image>
 <image style="z-index:10;position:absolute;border:2px indent; top:%50;left:%50;"src="title.png"id="title"></image>
 <canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas>
 
@@ -51,7 +51,7 @@
 <text>Note: floats (numbers with decimals) are supported, but visualy will be rounded eg: 3.14 will look like 3, if that helps.</text>
 </div>
 </div>
-<div hidden id="menu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:10px;">
+<div hidden id="menu" style="background-color:#717171;z-index:10;position:absolute;width:200px;overflow:auto;height:40%;border:2px indent; top:10px;left:10px;">
 <div hidden id="moveEditor" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:60%;">
 <button onClick="toggleCustomHelp()">???</button>
 <div></div>
@@ -69,8 +69,8 @@
 
 <link rel="icon" type="image/x-icon" href="favicon.png">
 </head>
-<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:0%; background-color:red" id="keepWatching"onClick="keepWatching()">Keep Watching Current Canvas</button>
-<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="newCanvasButton"onClick="initalNewCanvas()">New Canvas</button>
+<button style="z-index:10;width:20%;position:absolute;border:2px indent; top:70%;left:0%; background-color:red" id="keepWatching"onClick="keepWatching()">Keep Watching Current Canvas</button>
+<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; width:20%; background-color:red" id="newCanvasButton"onClick="initalNewCanvas()">New Canvas</button>
 <button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="startButton" hidden  onClick="startCanvas()">Send in the ANTS!</button>
 <script>
 canvas = document.getElementById('visuals');
@@ -121,6 +121,10 @@ const analyser = document.getElementById("analyser")
 function showAnalyserData(ant) {
 analyser.hidden=true
 }
+function toggleSettingsMenu(){
+menu.hidden=!menu.hidden
+}
+
 const sin = (n) => Math.sin(n)
 const cos = (n) => Math.cos(n)
 const tan = (n) => Math.tan(n)
@@ -446,7 +450,7 @@ entities = entities.filter((ent) => !ent.remove);
 }
 }
 
-settings = {fadeAmount:3,showAnts:false,runsPerTick:10,startingAnts:18,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,grainyBackground:false,grainAmnt:10,facsDetermineBehavior:false,antSize:1,violentAnts:false,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1,freeForAll:false,antsDie:true,colorPulse:false,antAgression:100,desiredPop:1000,reactivePopulation:false}
+settings = {fadeAmount:3,showAnts:false,runsPerTick:10,startingAnts:18,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,grainyBackground:false,grainAmnt:10,antSize:1,violentAnts:false,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1,freeForAll:false,antsDie:true,colorPulse:false,antAgression:100,desiredPop:1000,reactivePopulation:false}
 const isMobile = isDisGuyMobile()
 
 
@@ -460,6 +464,7 @@ function isDisGuyMobile() {
 
 if (isMobile) {
 settings.fade=false
+document.getElementById("TouchButton").hidden=false
 }
 
 //make settings button
@@ -472,14 +477,15 @@ newButt = document.createElement('input');
 newDiv.appendChild(newButt)
 
 newButt.value=settings[i]
+type=String(typeof settings[i])
 newButt.checked=!!settings[i]
 newButt.ref=String(i)
 
-type=String(typeof settings[i])
+
 console.log(type,settings[i])
 
 if (type == 'boolean'){newButt.type="checkbox";}
-if (type == 'number'){newButt.type="number";}
+if (type == 'number'){newButt.type="number";newButt.style.width="20%"}
 if (type == 'string'){newButt.type="color";}
 newButt.addEventListener('input', (evnt) => {
 settings[event.target.ref]=event.target.value
@@ -528,7 +534,7 @@ tickRepeat()
 }
 document.addEventListener('keydown',function (e){
 console.log(e)
-if (e.keyCode==77&&!typing){menu.hidden=!menu.hidden;moveEditor.hidden=menu.hidden}
+if (e.keyCode==77&&!typing){menu.hidden=!menu.hidden;moveEditor.hidden=true}
 if (e.keyCode==83&&!typing){
 
 for (i in entities){
@@ -740,7 +746,7 @@ nt=0
 nv=0
 
 
-if (settings.facsDetermineBehavior){moveType=curr.faction.behavior}
+
 tDir=(pointAt(c2.behavior.target.x,c2.behavior.target.y,c2.x,c2.y)/(Math.PI/180))*Math.sign(curr.behavior.target.amnt)
 //console.log(tDir,c2.behavior.target)
 
