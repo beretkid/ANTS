@@ -5,7 +5,7 @@ ANTS, why do they draw on a weird canvas doohicky?? i don't know! but you have a
 FAQ:
 
 "What is this game even about..": This is a zero player drawing.. game(?) you will never paint on any canvases yourself, rather your ANTS do it.
-                                Think of it as walking in a random patter with a comicly large paintbrush attatched to you to make a random painting of that pattern
+                                Think of it as walking in a random pattern with a comicly large paintbrush attatched to you to make a random painting of that pattern
                               exept theres also 456 people doing the same exact pattern as you, and theres 2766 people that are doing other patterns and occasionally
                             want to beat the shit out of you because they think their pattern is cooler. we all did that when we were kids, i remember it like it was yesterday!
 
@@ -13,7 +13,7 @@ FAQ:
 
 "What does the shake button do?": basicly just shake all the ANTS around, good for if you don't want them to clump up, and or just want to annoy them.
 
-"Whats the weird Movestyle customizer doohicky?": that is an editor for setting all ANTS movestyles to a specific thing you want, it 
+"Whats the weird Movestyle customizer doohicky?": that is an editor for setting all ANTS movestyles to a specific thing you want.
 
 "How do i open the settings/main menu again?": n is to re-open the main menu, m is to do the same but for the settings menu.
 
