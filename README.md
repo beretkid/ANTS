@@ -55,3 +55,5 @@ Grain amount: the maximum amount the game will shift background pixels.
 Ant Size: How big (in pixels) ANTS will be drawn as, usually you would keep this at 1, but you could really set this to anything.
 
 AntsMutate: Changes whether ANTS will have a chance to be alterred in any way when they are born, change this if you basicly want them to just clone themselves
+
+antAgression: The 0.5/x chance for other ants (If violence is enabled) to try to kill eachother, helpfull if you don't want them to drive themselves to extinction too fast
