@@ -2,6 +2,8 @@
 
 <image style="z-index:10;position:absolute;border:2px indent; top:%50;left:%50;"src="title.png"id="title"></image>
 <canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas>
+
+<div hidden id="analyser" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:5%;left:75%;width:20%;height:30%"></div>
 <div hidden id="helpMenu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:0%;left:50%;">
 <text>"What the hell is this???"</text>
 <div></div>
@@ -23,15 +25,17 @@
 <text>Heres an list of all the functions and variables: </text>
 <div></div>
 <br>
+
 <text>sin(value), Cos(value), and tan(value) -- self explanitory i hope</text>
+<div></div>
+<text>x, y, v -- I really hope you know what the first two are, as for V please move your eyeballs up a bit.</text>
 <div></div>
 <text>random(min,max) --  also hopefully self explanitory</text>
 <div></div>
 <text>mod(value,modulus) -- Modulo, basicly loops back to zero if value exeeds modulus.</text>
 <div></div>
 <text>t -- the age of the current ANT; goes up every frame, and goes well with sin and cos!</text>
-<div></div>
-<text>x, y, v -- I really hope you know what the first two are, as for V please move your eyeballs up a bit.</text>
+
 
 
 <div></div>
@@ -98,7 +102,7 @@ for (let i = 0; i < 100 ; i++) {
 tx+=moveStyle.x(random(0,100),random(0,100),random(0,100),random(0,10000))
 ty+=moveStyle.y(random(0,100),random(0,100),random(0,100),random(0,10000))
 }
-console.log(tx,ty)
+
 }
 const thres = (n,m) => Math.max(n,m)-m
 const mod = (n, m) => ((n % m) + m) % m;
@@ -111,6 +115,12 @@ const limit = (n) => Math.min((n-Math.max(n,1)*0.9)+0.9,2); // used to limit the
 var customX = (x,y) => (random(-1,1));
 var customY = (x,y) => (random(-1,1));
 var customV = (x,y) => (random(-1,1));
+
+const ui = {antSelected:null,focus:false}
+const analyser = document.getElementById("analyser")
+function showAnalyserData(ant) {
+analyser.hidden=true
+}
 const sin = (n) => Math.sin(n)
 const cos = (n) => Math.cos(n)
 const tan = (n) => Math.tan(n)
@@ -163,7 +173,7 @@ args.push(getRandMathBlock(inset+1))
 
 }
 //set return to a function
-r = func.replaceAll('$',getRandMathBlock(inset+1))
+r = func.replaceAll('$',getRandMathBlock(inset+1)).replaceAll('#',getRandMathBlock(inset+1))
 }else {
 if(coinFlip()) {
 
@@ -184,7 +194,7 @@ function coinFlip(chances=1){return !!(random(0,chances)==1)}
 //also make it so custom movetypes are induvisual.
 // the '!' is a tag that signifies wether this should NOT be used as a final output.
 //sin is safe because it only outputs -1 - 1 but things like pow and tan are not.
-const randomFuncs = "sin(gt*$) Math.sign($) random(-1,1) cos(gt*$) (thres(20,$)*$)".split(' ')
+const randomFuncs = "sin($) Math.sign($) random(-1,1) cos($) (thres(20,$)*$) mod($,#) tan($)".split(' ')
 const randomVariables = "!t !v random(-1,1) random(-Math.PI,Math.PI,0)".split(' ')
 
 
@@ -291,21 +301,31 @@ return entities[entities.length]
         const distance = calculateDistance(x1, y1, x2, y2);
         return distance <= threshold;
     }
+	 onmousemove = (event) => {ui.fadeTimer=1000;}
 onmousedown = (event) => { 
 mouseX=event.clientX
 mouseY=event.clientY
   const gridX = Math.floor(mouseX / cellSize);
     const gridY = Math.floor(mouseY / cellSize);
-
+var closest = {x:-100,y:-100,ant:null}
 for (let x = -1; x <= 1; x++) {
         for (let y = -1; y <= 1; y++) {
             const key = `${gridX + x},${gridY + y}`;
             const neighbors = spatialMap.get(key);
-
+				
+				
             if (neighbors) {
                 for (let other of neighbors) {
+					 		//go through all the ants nearby
                     console.log(other)
-	
+						  if (calculateDistance(mouseX.mouseY,other.x,other.y)<calculateDistance(closest.x,closest.y,other.x,other.y)){
+						  closest.ant = other
+						  closest.x = other.x
+						  closest.y = other.y
+						  }
+						  }
+						  if (neighbors.length>0){
+						  showAnalyserData(closest.ant)
 						  }
                     }}}
 }
@@ -348,13 +368,13 @@ newXForm=String(document.getElementById("moveTextX").value)
 newYForm=String(document.getElementById("moveTextY").value)
 newVForm=String(document.getElementById("moveTextV").value)
 if (newVForm.split('').length==0){newVForm="0";console.log("changed m")}
-console.log(newXForm)
+
 try {
 for (i in entities)
 entities[i].moveStyle.x=blindEval("(x,y,v,t) => "+newXForm)
 entities[i].moveStyle.y=blindEval("(x,y,v,t) => "+newYForm)
 entities[i].moveStyle.v=blindEval("(x,y,v,t) => "+newVForm)
-console.log(entities[i].movesStyle)
+
 }
 catch (error) {
     console.error("Invalid JS!");
@@ -414,7 +434,7 @@ ctx.globalAlpha = 1;
 for (i in entities) {
 curr = entities[i]
 if (curr.mutations.usesCustomXY!==1){
-console.log(curr.mutations.usesCustomXY)
+
 }
 if (isNaN(curr.life)||curr.life<0){curr.remove=true;totalAnts-=1;curr.faction.ants-=1}
 antBrain(curr)
@@ -426,7 +446,22 @@ entities = entities.filter((ent) => !ent.remove);
 }
 }
 
-settings = {fadeAmount:3,showAnts:false,doubleTap:true,startingAnts:18,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,grainyBackground:false,grainAmnt:10,facsDetermineBehavior:false,antSize:1,violentAnts:false,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1,freeForAll:false,antsDie:true}
+settings = {fadeAmount:3,showAnts:false,runsPerTick:10,startingAnts:18,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,grainyBackground:false,grainAmnt:10,facsDetermineBehavior:false,antSize:1,violentAnts:false,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1,freeForAll:false,antsDie:true,colorPulse:false,antAgression:100,desiredPop:1000,reactivePopulation:false}
+const isMobile = isDisGuyMobile()
+
+
+function isDisGuyMobile() {
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)||/iPhone|iPad|iPod/i.test(ua)){return true}
+  else{return false}
+}; // You'se onna'dem.. moo-Beel'se?
+
+
+
+if (isMobile) {
+settings.fade=false
+}
+
 //make settings button
 for (i in settings) {
 newDiv = document.createElement('div')
@@ -480,7 +515,7 @@ ny = random(0,h)
 tStart=Date.now()
 gt+=1
 tick()
-if (settings.doubletap){tick()}
+for (i = 0;i <settings.runsPerTick; i++){tick(!!(i==settings.runsPerTick))}
 setTimeout(()=> {
 tickDelay=Math.abs((Date.now()-tStart))-settings.gameSpeed
 diff=((tickDelay-tdSlow)/100)
@@ -545,7 +580,7 @@ for (let x = -1; x <= 1; x++) {
                     let dx = curr.x - other.x;
                     let dy = curr.y - other.y;
                     let distSq = dx*dx + dy*dy;
-                    chance=5-curr.curr.mutations.aggression
+                    chance=settings.antAgression-curr.curr.mutations.aggression
 						  
                     if (distSq < 4&&!random(-chance,chance)&&
 						  (curr.faction!==other.faction||settings.freeForAll)&&(!other.children.includes(curr)&&!other.parent==curr)) { // Ant on ant violence, but only if you are a different r--			//the coinflip of fate and doom
@@ -573,8 +608,12 @@ for (let x = -1; x <= 1; x++) {
         }
     }
 	 }
+//(settings.desiredPop+curr.mutations.bRateMod)+(entities.length-(settings.desiredPop+curr.mutations.bRateMod))
+if (settings.reactivePopulation){c=(settings.desiredPop/factions.length)-(curr.faction.ants)}else{c=settings.desiredPop-entities.length}
+if (!random(0,
+c
 
-if (!random(0,(1000+curr.mutations.bRateMod)+(entities.length-(1000+curr.mutations.bRateMod)))){birthAntFromParent(curr);curr.life-=100}
+)){birthAntFromParent(curr);curr.life-=100}
 //add the new movement
 curr.ox=curr.x
 curr.oy=curr.y
@@ -593,7 +632,9 @@ curr.x=mod(curr.x+moves.x,w+1)
 curr.y=mod(curr.y+moves.y,h+1)
 curr.speed=Math.abs((curr.x+curr.y)-(curr.ox,curr.oy))
 if (settings.useLines&&Math.abs(curr.oy-curr.y)<10) {
-				g=random(-settings.drawGrain,settings.drawGrain)
+				if (settings.draw){ag=Math.sin(gt-c2.born/100)*10}else{ag=0}
+				g=random(-settings.drawGrain,settings.drawGrain)+ag
+				
 				ctx.strokeStyle = assembleRGB(curr.c1+g,curr.c2+g,curr.c3+g)
 				if (settings.forceColor){ctx.strokeStyle=settings.colorToForce}
 				ctx.beginPath();
@@ -722,7 +763,8 @@ speedcap=1
 nx = Math.max(Math.min(nx,speedcap),-speedcap)
 ny = Math.max(Math.min(ny,speedcap),-speedcap)
 }
-nv=nv%Number.MAX_SAFE_INTEGER
+maxNV=10000000000
+nv=mod(nv+maxNV,maxNV*2)-maxNV
 return {x:nx,y:ny,t:nt,value:nv}
 }
  tickRepeat()
