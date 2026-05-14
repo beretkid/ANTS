@@ -1,7 +1,7 @@
 ![Cool Preview Image](https://github.com/beretkid/ANTS/blob/main/git/download%20-%202026-05-13T141326.372.png)
 
 ANTS, why do they draw on a weird canvas doohicky?? i don't know! but you have an ungodly amount of them, so you might as well make them scribble all over something!
-
+(Sorry for the mildly long readme, you do not need to read the readme even though it is telling you to.)
 FAQ:
 
 "What is this game even about..": This is a zero player drawing.. game(?) you will never paint on any canvases yourself, rather your ANTS do it.
@@ -19,6 +19,49 @@ FAQ:
 
 
 "What in the airplane controls is that settings menu!?": First of all, don't judge me, im very sensitive about my menus. but second of all yea it is pretty bad
+
+"Why do some ants behave differently from others?": What a convient question to get out of the FaQ section and move into a nerdy explaination of mutations for ANTS! 
+
+all ANTS have three main mutables (basicly means changable if you don't know what that means) Variables in them.
+one is their movestyle, two is their behavior mutations, and three is their color. all of thease get passed down, and occasionaly get changed slightly
+through an ANTS children/spawn/kids/offspring.
+
+
+
+
+v is the direction it moves every tick/frame with radians (its ok if you don't know what that is, as it will very rarely/never will be of importance to you.)
+Movestyle is the calculation it runs and adds the result of said calculation to v.
+
+very occasionally it makes 2 other movestyles for the x and y values, but this will only really ever happen if you edit one to do that.
+
+"where is it getting thease calculations from???"
+
+You should not have said th--NERD SHIT AHEAD!!! (look what you have done, we are all going to perish now.)
+Basicly it has a list of functions, variables, and operators to use. when it generates/changes a movestyle
+
+When it generates one, it essentaily throws a bunch of those into a horrible tasting but pretty looking stew. occasionnaly it barfs a rng number into there too. delecious!
+an example of said stew of doom would look like :
+
+random(-1,1)+t%random(-1,1)-cos(v)
+
+"That Calculation dosen't make any sense at all.."
+good! it isnt supposed to!
+
+It also occasionnaly modifys existing parts of a movestyle, like when an ANT mutates.
+Nerd shit over. (I lied to you, mistagullibleoverherepeoplegeddaloadovdisgi!)
+
+Don't worry the rest are significantly less nerdy! (And quicker if you just wanna read this and be done with it)
+
+Second is behavior mutations
+First of all, they have little to no relation to the movestyles. 
+instead it is a list of different variables that influince an ANTS personal behavior in-game.
+
+You will probably never notice them visualy, exept maybe a few, so don't be CREEPY and stalk some poor ANT to see if they have one.
+you can stalk them for litterly any other reason though, i don't really care.
+
+third is their color.
+
+this is simply just an rgb value that has a chanace to have its numbers fucked with everytime a new ANT is born.
 
 Heres a list of what all the not-very-self-explanitory settings do (In no particular order):
 
@@ -55,5 +98,11 @@ Grain amount: the maximum amount the game will shift background pixels.
 Ant Size: How big (in pixels) ANTS will be drawn as, usually you would keep this at 1, but you could really set this to anything.
 
 AntsMutate: Changes whether ANTS will have a chance to be alterred in any way when they are born, change this if you basicly want them to just clone themselves
+
+AntAgression: The global chances for ANTS to get into combat; This is also changed by the ants personal agression mutation value.
+
+DesiredPop: the population the birthrate will try to get it to by decreasing/increasing the chances of a birth each tick.
+
+Reactive Population: this changes the birthrate system to work on a faction-to-faction level.
 
 antAgression: The 0.5/x chance for other ants (If violence is enabled) to try to kill eachother, helpfull if you don't want them to drive themselves to extinction too fast
