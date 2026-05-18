@@ -1,5 +1,5 @@
 <body style="background-color: black;"></body>
-<image style="z-index:10;position:absolute;border:2px indent;width:10%;height:10%;top:%90;left:%90;"src="settings.png"id="TouchButton" hidden></image>
+<image onClick="toggleSettingsMenu()" style="z-index:100;position:absolute;border:2px indent;width:wv1;height:wv1;top:90%;left:90%;"src="settings.png"id="TouchButton" hidden></image>
 <image style="z-index:10;position:absolute;border:2px indent; top:%50;left:%50;"src="title.png"id="title"></image>
 <canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas>
 
@@ -69,9 +69,11 @@
 
 <link rel="icon" type="image/x-icon" href="favicon.png">
 </head>
-<button style="z-index:10;width:20%;position:absolute;border:2px indent; top:70%;left:0%; background-color:red" id="keepWatching"onClick="keepWatching()">Keep Watching Current Canvas</button>
-<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; width:20%; background-color:red" id="newCanvasButton"onClick="initalNewCanvas()">New Canvas</button>
-<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="startButton" hidden  onClick="startCanvas()">Send in the ANTS!</button>
+<button style="z-index:10;width:40%;height:15%;position:absolute;border:2px indent; top:70%;left:0%; background-color:red;font-size: 5vw;" id="keepWatching"onClick="keepWatching()">Keep Watching Current Canvas</button>
+<button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; width:40%;height:15%;font-size: 5vw; background-color:red" id="newCanvasButton"onClick="initalNewCanvas()">New Canvas</button>
+<button style="z-index:10;font-size: 5vw;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="startButton" hidden  onClick="startCanvas()">Send in the ANTS!</button>
+<input type="file" id="fileInput"style="z-index:10;font-size: 2vw;position:absolute;border:2px indent; top:85%;left:0%; background-color:red"  >
+<button style="z-index:10;font-size: 2vw;position:absolute;border:2px indent; top:85%;left:50%; background-color:red" id="saveButton"   onClick="saveGame()">Save Current game</button>
 <script>
 canvas = document.getElementById('visuals');
   ctx = canvas.getContext("2d",{ willReadFrequently: true });
@@ -135,12 +137,17 @@ document.getElementById("keepWatching").hidden=true
 startButton.hidden=true
 startNewButton.hidden=true
 menu.hidden=true
+fileInput.hidden = true
 title.hidden = true
-
+saveButton.hidden = true
 }
+saveButton=document.getElementById("saveButton")
+
 function initalNewCanvas(contents) {
 menu.hidden=false
 title.hidden=true
+
+startNewButton.hidden=true
 startButton.hidden=false
 
 }
@@ -164,6 +171,31 @@ bigFunc=bigFunc.replace("&", getRandom(randomOperators));
 
 }
 return bigFunc
+}
+function decode(text,seed) {
+    
+u8=new Uint8Array(encoder.encode(text))
+    s=String(encoder.encode(String(seed)).join('')).split('')
+    
+    for (i in u8) {
+        shift=Number(s[mod(i,s.length)])
+        
+u8[i]=mod(u8[i]-shift,255)    // *unshifts your organs grotesquely T-T
+
+}
+text = decoder.decode(u8);
+    
+return text
+}
+function encode(text,seed) {
+bytes = encoder.encode(text);
+s=String(encoder.encode(String(seed)).join('')).split('')
+
+for (i in bytes) {
+shift=Number(s[mod(i,s.length)])
+bytes[i]=mod(bytes[i]+shift,255)    // *shifts your organs cutely uwu
+}
+return decoder.decode(bytes)
 }
 function getRandMathBlock(inset=0) {
 if (!random(-1-inset,1+inset)) {
@@ -198,7 +230,7 @@ function coinFlip(chances=1){return !!(random(0,chances)==1)}
 //also make it so custom movetypes are induvisual.
 // the '!' is a tag that signifies wether this should NOT be used as a final output.
 //sin is safe because it only outputs -1 - 1 but things like pow and tan are not.
-const randomFuncs = "sin($) Math.sign($) random(-1,1) cos($) (thres(20,$)*$) mod($,#) tan($)".split(' ')
+const randomFuncs = "sin($) Math.sign($) random(-1,1) cos($) Math.max(random(Math.max(-#,-5),1),0)*random(-$,$) mod($,#) tan($)".split(' ')
 const randomVariables = "!t !v random(-1,1) random(-Math.PI,Math.PI,0)".split(' ')
 
 
@@ -386,6 +418,88 @@ catch (error) {
   }
 console.log(customX)
 }
+function download(filename, text) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
+  const reader = new FileReader()
+    reader.onload = () => {//basicly loadfromfile 2
+    console.log(reader.result); // File content
+	 save=reader.result.split('|$%|')
+	 
+	 newfac=save[0].split('|')
+	 for (i in newfac) {
+	 newfac[i]=JSON.parse(newfac[i])
+	 }
+	 ents=save[1].split('|')
+	  for (i in ents) {
+	 ents[i]=JSON.parse(ents[i])
+	 }
+	 console.log(newfac)
+	 clearCanvas()
+	 factions=newfac
+	 entities=ents
+	 const coolarray = new Uint8ClampedArray(save[2].split('|'));
+	 const newcanvas = new ImageData(coolarray, w, h);
+	 
+	 ctx.putImageData(newcanvas, 0, 0);
+	 
+	 
+  };
+function loadFromFile(file) {
+reader.readAsText(file)
+}
+const decoder = new TextDecoder('utf-8');
+const encoder = new TextEncoder();
+function saveGame(){
+big=[]
+for (i in entities){
+
+entities[i].moveStyle.x=null
+entities[i].moveStyle.y=null
+entities[i].moveStyle.v=null
+entities[i].children.length=0
+entities[i].parent=null
+
+
+
+c=structuredClone(entities[i])
+
+c.parent=null
+big.push(JSON.stringify(c))
+}
+big2=[]
+for (i in factions){
+big2.push(JSON.stringify(factions[i]))
+}
+
+
+
+save=big.join('|')
+save = [big2.join('|'),save,ctx.getImageData(0, 0, canvas.width, canvas.height).data.join('|')].join("|$%|")
+
+console.log(save)
+download("Save-"+String(mod(Date.now(),9999))+".ANTS",save)
+}
+const fileInput = document.getElementById('fileInput');
+
+fileInput.addEventListener('change', (event) => {
+  const files = event.target.files; // Access the FileList object
+  if (files.length > 0) {
+    loadFromFile(files[0])
+  }
+});
+
+
+
 function startCanvas() {
 clearCanvas()
 startButton.hidden=true
@@ -397,14 +511,14 @@ factions=[]
 for (let i = 0; i < settings.startingAnts; i++) {
 rx=random(0,w)
 ry=random(0,h)
-fac=factions.push({ants:0,targ:{x:rx,y:ry},behavior:random(0,settings.mutations)})
+fac=factions.push({ants:0})
 console.log(fac,factions[i])
 birthAnt(factions[i],rx,ry)
 }
 }
 function clearCanvas(){
 entities.length=0
-
+factions.length=0
 ctx.clearRect(0,0,w,h)
 }
 function tick() {
@@ -437,9 +551,7 @@ slowDarken(hexToRgb(settings.bColor),settings.fadeAmount)
 ctx.globalAlpha = 1;
 for (i in entities) {
 curr = entities[i]
-if (curr.mutations.usesCustomXY!==1){
 
-}
 if (isNaN(curr.life)||curr.life<0){curr.remove=true;totalAnts-=1;curr.faction.ants-=1}
 antBrain(curr)
 
@@ -450,7 +562,7 @@ entities = entities.filter((ent) => !ent.remove);
 }
 }
 
-settings = {fadeAmount:3,showAnts:false,runsPerTick:10,startingAnts:18,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,grainyBackground:false,grainAmnt:10,antSize:1,violentAnts:false,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1,freeForAll:false,antsDie:true,colorPulse:false,antAgression:100,desiredPop:1000,reactivePopulation:false}
+settings = {fadeAmount:1,showAnts:false,runsPerTick:navigator.hardwareConcurrency*2,startingAnts:18,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,grainyBackground:false,grainAmnt:10,antSize:1,violentAnts:false,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1,freeForAll:false,antsDie:true,colorPulse:false,antAgression:100,desiredPop:1000,reactivePopulation:true}
 const isMobile = isDisGuyMobile()
 
 
@@ -473,7 +585,7 @@ newDiv = document.createElement('div')
 menu.appendChild(newDiv)
 newDiv.innerText=String(i)
 newButt = document.createElement('input');
-
+newButt.placeholder=String(settings[i])
 newDiv.appendChild(newButt)
 
 newButt.value=settings[i]
@@ -485,7 +597,7 @@ newButt.ref=String(i)
 console.log(type,settings[i])
 
 if (type == 'boolean'){newButt.type="checkbox";}
-if (type == 'number'){newButt.type="number";newButt.style.width="20%"}
+if (type == 'number'){newButt.type="number";newButt.style.width="30%"}
 if (type == 'string'){newButt.type="color";}
 newButt.addEventListener('input', (evnt) => {
 settings[event.target.ref]=event.target.value
@@ -549,6 +661,8 @@ document.getElementById("keepWatching").hidden=false
 startButton.hidden=true
 startNewButton.hidden=false
 title.hidden = false
+saveButton.hidden = false
+fileInput.hidden = false
 }
 })
 var gameSpeed=0
@@ -749,15 +863,10 @@ nv=0
 
 tDir=(pointAt(c2.behavior.target.x,c2.behavior.target.y,c2.x,c2.y)/(Math.PI/180))*Math.sign(curr.behavior.target.amnt)
 //console.log(tDir,c2.behavior.target)
-
-if (c2.mutations.usesCustomXY<0){
-
-nx = limit(c2.moveStyle.x(c2.x,c2.y,c2.value,gt-c2.born))
-ny = limit(c2.moveStyle.y(c2.x,c2.y,c2.value,gt-c2.born))
-
-}
 nx = Math.sin(c2.value)
 ny = Math.cos(c2.value)
+
+if (!c2.moveStyle["v"]){mv=c2.moveStyle.mv;c2.moveStyle.v=blindEval(mv.replaceAll('[','').replaceAll(']',''));}
 nv = limit(c2.moveStyle.v(c2.x,c2.y,c2.value,gt-c2.born))
 
 
