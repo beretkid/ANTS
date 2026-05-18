@@ -1,7 +1,7 @@
-<body style="background-color: black;"></body>
+<body style="background-color: black; overflow:hidden"></body>
 <image onClick="toggleSettingsMenu()" style="z-index:100;position:absolute;border:2px indent;width:wv1;height:wv1;top:90%;left:90%;"src="settings.png"id="TouchButton" hidden></image>
 <image style="z-index:10;position:absolute;border:2px indent; top:%50;left:%50;"src="title.png"id="title"></image>
-<canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas>
+<div style="position:absolute;overflow:clip;top:0%;left:0%;border:2px solid; width:100%;height:100%;"><canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas></div>
 
 <div hidden id="analyser" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:5%;left:75%;width:20%;height:30%"></div>
 <div hidden id="helpMenu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:0%;left:50%;">
@@ -51,7 +51,10 @@
 <text>Note: floats (numbers with decimals) are supported, but visualy will be rounded eg: 3.14 will look like 3, if that helps.</text>
 </div>
 </div>
+<div hidden id="canvasSizePickers"style="top:90vh;position:absolute"><text style="color:#cfcfcf">Width</text><input style="width:75px" value=100 id="widthInput">
+<text style="color:#cfcfcf">Height</text><input style="width:75px" value=100 id="heightInput"><button onClick="updateCanvasSize()">Resize</button></div>
 <div hidden id="menu" style="background-color:#717171;z-index:10;position:absolute;width:200px;overflow:auto;height:40%;border:2px indent; top:10px;left:10px;">
+
 <div hidden id="moveEditor" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:60%;">
 <button onClick="toggleCustomHelp()">???</button>
 <div></div>
@@ -63,6 +66,7 @@
 <div></div>
 <button onClick="updateCmove()">Update Movesets</button><button onClick="importCustom()">↓</button><button onClick="exportCustom()">↑</button><button onClick="genRandomMaths()">generate Random</button>
 </div>
+
 </div>
 <head>
   <title>ANTS</title>
@@ -80,11 +84,35 @@ canvas = document.getElementById('visuals');
   
 
 
+const canvasHolder = canvas.parentElement
+canvasHolder.style.width=window.innerWidth
 
-canvas.width = window.innerWidth * 1
-canvas.height = window.innerHeight * 1
-var w = canvas.width;
-var h = canvas.height;
+var w = window.innerWidth/2;
+var h = window.innerHeight/2;
+canvas.width = w
+canvas.height = h
+cZoom=1
+hovering=false
+canvasHolder.addEventListener('mouseenter', () => {
+  hovering = true;
+  console.log('Mouse entered!');
+});
+
+canvasHolder.addEventListener('mouseleave', () => {
+  hovering = false;
+  console.log('Mouse left!');
+});
+window.addEventListener('wheel', function(e) {
+    // Prevent the default browser scroll/zoom
+	 if(hovering||e.ctrlKey){
+	 if(e.ctrlKey){
+		cZoom-=(e.deltaX+e.deltaY)/100
+	 }
+	 transformCanvas()
+    e.preventDefault();
+	 console.log(e)
+	 }
+}, { passive: false }); // CRITICAL: This allows preventDefault to work
 var entities = []
 var food = []
 var stats = {antsBorn:0,antsDied:0,antsKilledInAction:0,antsLiving:0}
@@ -123,8 +151,10 @@ const analyser = document.getElementById("analyser")
 function showAnalyserData(ant) {
 analyser.hidden=true
 }
+canvasSizePickers=document.getElementById("canvasSizePickers")
 function toggleSettingsMenu(){
 menu.hidden=!menu.hidden
+canvasSizePickers.hidden = menu.hidden
 }
 
 const sin = (n) => Math.sin(n)
@@ -150,6 +180,10 @@ title.hidden=true
 startNewButton.hidden=true
 startButton.hidden=false
 
+}
+
+function snapMutated(curr,value){
+if (curr.mutations.snap>1){return (Math.round(value/rad45)*rad45)}else{return value}
 }
 function getRandom(list){
 return list[random(0,list.length-1)]
@@ -230,7 +264,8 @@ function coinFlip(chances=1){return !!(random(0,chances)==1)}
 //also make it so custom movetypes are induvisual.
 // the '!' is a tag that signifies wether this should NOT be used as a final output.
 //sin is safe because it only outputs -1 - 1 but things like pow and tan are not.
-const randomFuncs = "sin($) Math.sign($) random(-1,1) cos($) Math.max(random(Math.max(-#,-5),1),0)*random(-$,$) mod($,#) tan($)".split(' ')
+
+const randomFuncs = "sin($) Math.sign($) random(-1,1) cos($) (Math.round($/rad45)*rad45) Math.max(random(Math.max(-#,-5),1),0)*random(-$,$) mod($,#) tan($)".split(' ')
 const randomVariables = "!t !v random(-1,1) random(-Math.PI,Math.PI,0)".split(' ')
 
 
@@ -251,6 +286,21 @@ function hexToRgb(hex) {
 
   return { r, g, b };
 }
+const rad45=45*(Math.PI/180)
+const rad90=90*(Math.PI/180)
+var csox=(window.innerWidth/2)-w/2
+var csoy=(window.innerHeight/2)-h/2
+window.addEventListener('wheel', (event) => {
+  // deltaY is the amount scrolled (positive = down, negative = up)
+   if(hovering){
+  csox+=event.deltaX/cZoom
+  csoy+=event.deltaY/cZoom
+	
+    //console.log(csoy-window.scrollY,"ahAHH");
+transformCanvas()
+}
+});
+ctx.lineCap="butt"
 function slowDarken(color,amnt) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
@@ -287,6 +337,13 @@ formEditV.value = generateRandomMath()
 function toggleCustomHelp() {
 document.getElementById("helpMenu").hidden = !document.getElementById("helpMenu").hidden
 }
+function updateCanvasSize() {
+w=document.getElementById("widthInput").value
+h=document.getElementById("heightInput").value
+canvas.width=w
+canvas.height=h
+transformCanvas()
+}
 function random(min, max,snap) {
 
 if (snap==undefined){
@@ -322,7 +379,7 @@ return {x:blindEval(mx.replaceAll('[','').replaceAll(']','')),y:blindEval(my.rep
 //aggression: the likelyhood of an ant engaging in combat
 //bRateMod: the ratio between the ANTS birthrate vs its lifespan
 
-function birthAnt(faction,x=random(0,w),y=random(0,h),c1=random(0,225),c2=random(0,225),c3=random(0,225),t=0,mutations={aggression:1,bRateMod:1,usesCustomXY:0},value=1,moveStyle=generateNewMovestyle(),parent) {
+function birthAnt(faction,x=random(0,w),y=random(0,h),c1=random(0,225),c2=random(0,225),c3=random(0,225),t=0,mutations={aggression:1,bRateMod:random(0,2),usesCustomXY:0,synced:random(0,2),snap:random(0,2)},value=1,moveStyle=generateNewMovestyle(),parent) {
 faction.ants+=1
 totalAnts+=1
 stats.antsBorn+=1
@@ -400,16 +457,14 @@ formEditY.value=fields[1]
 formEditV.value=fields[2]
 }
 function updateCmove() {
-newXForm=String(document.getElementById("moveTextX").value)
-newYForm=String(document.getElementById("moveTextY").value)
+
 newVForm=String(document.getElementById("moveTextV").value)
 if (newVForm.split('').length==0){newVForm="0";console.log("changed m")}
 
 try {
 for (i in entities)
-entities[i].moveStyle.x=blindEval("(x,y,v,t) => "+newXForm)
-entities[i].moveStyle.y=blindEval("(x,y,v,t) => "+newYForm)
-entities[i].moveStyle.v=blindEval("(x,y,v,t) => "+newVForm)
+
+entities[i].moveStyle.mv=blindEval("(x,y,v,t) => "+newVForm)
 
 }
 catch (error) {
@@ -434,7 +489,10 @@ function download(filename, text) {
     reader.onload = () => {//basicly loadfromfile 2
     console.log(reader.result); // File content
 	 save=reader.result.split('|$%|')
-	 
+	 //0 is factions
+	 //1 is entities
+	 //2 is the pixels
+	 //3 is the stats
 	 newfac=save[0].split('|')
 	 for (i in newfac) {
 	 newfac[i]=JSON.parse(newfac[i])
@@ -447,7 +505,12 @@ function download(filename, text) {
 	 clearCanvas()
 	 factions=newfac
 	 entities=ents
-	 const coolarray = new Uint8ClampedArray(save[2].split('|'));
+	 
+	 arr=save[2].split('|')
+	 sets=JSON.parse(save[3])
+	 w=sets.w
+	 h=sets.h
+	 const coolarray = new Uint8ClampedArray(arr);
 	 const newcanvas = new ImageData(coolarray, w, h);
 	 
 	 ctx.putImageData(newcanvas, 0, 0);
@@ -484,7 +547,7 @@ big2.push(JSON.stringify(factions[i]))
 
 
 save=big.join('|')
-save = [big2.join('|'),save,ctx.getImageData(0, 0, canvas.width, canvas.height).data.join('|')].join("|$%|")
+save = [big2.join('|'),save,ctx.getImageData(0, 0, canvas.width, canvas.height).data.join('|'),JSON.stringify({w:w,h:h})].join("|$%|")
 
 console.log(save)
 download("Save-"+String(mod(Date.now(),9999))+".ANTS",save)
@@ -521,12 +584,22 @@ entities.length=0
 factions.length=0
 ctx.clearRect(0,0,w,h)
 }
+function transformCanvas(){
+//(csox)/cZoom+canvas.width/2 -- center
+csoy=Math.min(Math.max(csoy,canvas.height/2),window.innerHeight-canvas.height/2)
+csox=Math.min(Math.max(csox,canvas.width/2),window.innerWidth-canvas.width/2)
+canvas.style.top=`${(csoy)/cZoom-(canvas.height/2)}px`
+canvas.style.left=`${(csox)/cZoom-(canvas.width/2)}px`
+canvas.style.zoom = cZoom;
+}
 function tick() {
+
+if(canvas.width != w||canvas.height != h){transformCanvas()}
 
 if (entities.length>0){
 //Wordgen
 if (settings.oneAnt){
-entities.length=1
+
 entities[0].life=1000000
 
 }
@@ -646,7 +719,7 @@ tickRepeat()
 }
 document.addEventListener('keydown',function (e){
 console.log(e)
-if (e.keyCode==77&&!typing){menu.hidden=!menu.hidden;moveEditor.hidden=true}
+if (e.keyCode==77&&!typing){menu.hidden=!menu.hidden;canvasSizePickers.hidden=menu.hidden;moveEditor.hidden=true}
 if (e.keyCode==83&&!typing){
 
 for (i in entities){
@@ -669,9 +742,8 @@ var gameSpeed=0
 function antBrain(curr) {
 ctx.fillStyle = assembleRGB(curr.c1,curr.c2,curr.c3)
 if ((gt%10)==5&&!random(-2,2)){
-curr.behavior.target.x=curr.faction.targ.x
-curr.behavior.target.y=curr.faction.targ.y
-curr.behavior.target.amnt=1
+
+
 curr.acc=120
 }
 size=settings.antSize
@@ -680,6 +752,7 @@ if(!settings.useLines){
 ctx.fillRect(Math.round(curr.x),Math.round(curr.y),size,size)
 }
 moves=move(0,curr.t,curr)
+
 curr.value+=moves.value
 curr.life-=(moves.x+moves.y)
 //start lookin for the other ants
@@ -730,10 +803,8 @@ for (let x = -1; x <= 1; x++) {
 	 }
 //(settings.desiredPop+curr.mutations.bRateMod)+(entities.length-(settings.desiredPop+curr.mutations.bRateMod))
 if (settings.reactivePopulation){c=(settings.desiredPop/factions.length)-(curr.faction.ants)}else{c=settings.desiredPop-entities.length}
-if (!random(0,
-c
-
-)){birthAntFromParent(curr);curr.life-=100}
+if (!random(0,c)&&!settings.oneant){birthAntFromParent(curr);curr.life-=100}
+if (entities.length>1&&settings.oneAnt&&i>0){curr.remove=true;}
 //add the new movement
 curr.ox=curr.x
 curr.oy=curr.y
@@ -748,8 +819,8 @@ if (curr.y+moves.y>h){curr.oy = 0}
 if (curr.y+moves.y>0){curr.oy = h}
 }
 
-curr.x=mod(curr.x+moves.x,w+1)
-curr.y=mod(curr.y+moves.y,h+1)
+curr.x=snapMutated(curr,mod(curr.x+moves.x,w+1))
+curr.y=snapMutated(curr,mod(curr.y+moves.y,h+1))
 curr.speed=Math.abs((curr.x+curr.y)-(curr.ox,curr.oy))
 if (settings.useLines&&Math.abs(curr.oy-curr.y)<10) {
 				if (settings.draw){ag=Math.sin(gt-c2.born/100)*10}else{ag=0}
@@ -867,7 +938,9 @@ nx = Math.sin(c2.value)
 ny = Math.cos(c2.value)
 
 if (!c2.moveStyle["v"]){mv=c2.moveStyle.mv;c2.moveStyle.v=blindEval(mv.replaceAll('[','').replaceAll(']',''));}
-nv = limit(c2.moveStyle.v(c2.x,c2.y,c2.value,gt-c2.born))
+tValue=gt-c2.born
+if (c2.mutations.synced>1){tValue=gt}
+nv = limit(c2.moveStyle.v(c2.x,c2.y,c2.value,tValue))//run the calculation
 
 
 
@@ -882,5 +955,6 @@ maxNV=10000000000
 nv=mod(nv+maxNV,maxNV*2)-maxNV
 return {x:nx,y:ny,t:nt,value:nv}
 }
+ transformCanvas()
  tickRepeat()
 </script>
