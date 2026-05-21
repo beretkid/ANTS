@@ -1,12 +1,32 @@
 <body style="background-color: black; overflow:hidden"></body>
-<image onClick="toggleSettingsMenu()" style="z-index:100;position:absolute;border:2px indent;width:wv1;height:wv1;top:90%;left:90%;"src="settings.png"id="TouchButton" hidden></image>
-<image style="z-index:10;position:absolute;border:2px indent; top:0%;left:0%;"src="title.png"id="title"></image>
+
+
+
+<div hidden style="position:absolute;top:0%;left:0%;z-index:14;width:100%;height:100%;background-color:#515151;" id="antEditor">
+
+<canvas style="background-color:#111111; width:50%;height:50%;position:absolute;top:0%;left:0%;" id="preview"  ></canvas>
+<textarea style="font-family:monospace;color:#9e812f;font-style:Courier, ;background-color:#303030;position:absolute;width:50%;height:50%;top:0%;left:50%;" placeholder="Type a custom Movestyle here, if this is left blank, the starting ant will be generated with a random one."id="movestyleEditorTextbox" rows="6" cols="50">
+</textarea>
+
+<button onClick="toggleCustomHelp()" style="position:absolute;top:50%;left:0%;">???</button><button onClick="startLonePainter()"
+style="position:absolute;top:90%;left:0%;width:20%;height:10%">Start lone Painter</button>
+<button  style="position:absolute;top:50%;left:0%;">???</button><button onClick="updateCmove()"
+style="position:absolute;top:90%;left:20%;width:20%;height:10%">Update all ANTS with this movestyle</button>
+<input id="runsValue" value="20"style="position:absolute;top:50%;left:50%;">
+<input id="startValue" type="range" min="-10" max="10" step="0.0001" style="position:absolute;top:50%;left:20%;">
+
+</div>
+
+
+
+<image onClick="toggleSettingsMenu()" style="z-index:12;position:absolute;border:2px indent;width:wv1;height:wv1;top:90%;left:90%;"src="settings.png"id="TouchButton" hidden></image>
+
 <div style="position:absolute;overflow:clip;top:0%;left:0%;border:2px solid; width:100%;height:100%;"><canvas id="visuals"width="100"height="100"style="position:absolute;top:0%;left:0%;border:2px solid;border-color:#0f0f0f"></canvas></div>
 
 <div hidden id="analyser" style="background-color:#717171;position:absolute;top:10vw;z-index:10;border:2px indent; top:50%;left:75%;width:20%;height:30%">
-<canvas style="background-color:#717171; width:100wv;height:100wv;" id="preview"  >
+
 </div>
-<div hidden id="helpMenu" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:0%;left:50%;">
+<div hidden id="helpMenu" style="background-color:#717171;z-index:18;position:absolute;border:2px indent; top:0%;left:50%;">
 <text>"What the hell is this???"</text>
 <div></div>
 <text>This is the menu for inputting your very own custom behaviors!</text>
@@ -58,7 +78,7 @@
 <div hidden id="menu" style="background-color:#717171;z-index:10;position:absolute;width:200px;overflow:auto;height:40%;border:2px indent; top:10px;left:10px;">
 
 <div hidden id="moveEditor" style="background-color:#717171;z-index:10;position:absolute;border:2px indent; top:10px;left:60%;">
-<button onClick="toggleCustomHelp()">???</button>
+
 <div></div>
 <text>X Formula</text><input type="text" id="moveTextX">
 <div></div>
@@ -75,11 +95,14 @@
 
 <link rel="icon" type="image/x-icon" href="favicon.png">
 </head>
+<div style="position:asbsolute;top:0%,left:0%"id="menuButtons">
+<image style="z-index:8;position:absolute;border:2px indent; top:0%;left:0%;"src="title.png"id="title"></image>
 <button style="z-index:10;width:40%;height:15%;position:absolute;border:2px indent; top:70%;left:0%; background-color:red;font-size: 5vw;" id="keepWatching"onClick="keepWatching()">Keep Watching Current Canvas</button>
 <button style="z-index:10;position:absolute;border:2px indent; top:70%;left:50%; width:40%;height:15%;font-size: 5vw; background-color:red" id="newCanvasButton"onClick="initalNewCanvas()">New Canvas</button>
 <button style="z-index:10;font-size: 5vw;position:absolute;border:2px indent; top:70%;left:50%; background-color:red" id="startButton" hidden  onClick="startCanvas()">Send in the ANTS!</button>
 <input type="file" id="fileInput"style="z-index:10;font-size: 2vw;position:absolute;border:2px indent; top:85%;left:0%; background-color:red"  >
 <button style="z-index:10;font-size: 2vw;position:absolute;border:2px indent; top:85%;left:50%; background-color:red" id="saveButton"   onClick="saveGame()">Save Current game</button>
+<button style="z-index:10;font-size: 2vw;position:absolute;border:2px indent; top:85%;left:70vw; background-color:red" id="lonePainterInitiatorButton"   onClick="initLone()">Lone Painter Mode</button></div>
 <script>
 canvas = document.getElementById('visuals');
   ctx = canvas.getContext("2d",{ willReadFrequently: true });
@@ -113,12 +136,13 @@ cZoom*=mult
 }
 window.addEventListener('wheel', function(e) {
     // Prevent the default browser scroll/zoom
-	 if(hovering||e.ctrlKey){
+	 if(hovering){
 	 if(e.ctrlKey){
 		
 		changeZoom((1-((e.deltaX+e.deltaY)/70)/2))
 	 }
 	 transformCanvas(e)
+	 
     e.preventDefault();
 	 console.log(e)
 	 }
@@ -167,7 +191,7 @@ var customV = (x,y) => (random(-1,1));
 const ui = {antSelected:null,focus:false}
 const analyser = document.getElementById("analyser")
 function showAnalyserData(ant) {
-analyser.hidden=false
+analyser.hidden=true
 }
 canvasSizePickers=document.getElementById("canvasSizePickers")
 function toggleSettingsMenu(){
@@ -180,20 +204,17 @@ const cos = (n) => Math.cos(n)
 const tan = (n) => Math.tan(n)
 const pow = (n,l) => Math.pow(n,l)
 const mean = (l) => l.reduce((a, b) => a + b, 0) / l.length;
+MButtons=document.getElementById("menuButtons")
 function keepWatching() {
-document.getElementById("keepWatching").hidden=true
-startButton.hidden=true
-startNewButton.hidden=true
-menu.hidden=true
-fileInput.hidden = true
-title.hidden = true
-saveButton.hidden = true
+
+MButtons.hidden=true
+
 }
 saveButton=document.getElementById("saveButton")
 
 function initalNewCanvas(contents) {
 menu.hidden=false
-title.hidden=true
+
 
 startNewButton.hidden=true
 startButton.hidden=false
@@ -459,15 +480,22 @@ for (let x = -1; x <= 1; x++) {
 }
 var gt=0
 const cellSize = 10; // Adjust based on ant interaction range
+const antEditor=document.getElementById("antEditor")
 let spatialMap = new Map();
+function initLone() {
+supersets.paused=true
+antEditor.hidden=false
+}
 
 function updateSpatialMap() {
     spatialMap.clear();
+	 if (entities.length>1){
     for (let ant of entities) {
         const key = `${Math.floor(ant.x / cellSize)},${Math.floor(ant.y / cellSize)}`;
         if (!spatialMap.has(key)) spatialMap.set(key, []);
         spatialMap.get(key).push(ant);
     }
+	 }
 }
 typing=false
 const formEditX=document.getElementById("moveTextX")
@@ -493,20 +521,12 @@ formEditV.value=fields[2]
 }
 function updateCmove() {
 
-newVForm=String(document.getElementById("moveTextV").value)
-if (newVForm.split('').length==0){newVForm="0";console.log("changed m")}
+for (i in entities){
 
-try {
-for (i in entities)
-
-entities[i].moveStyle.mv=blindEval("(x,y,v,t) => "+newVForm)
+entities[i].moveStyle.v=blindEval(customMovestyle)
 
 }
-catch (error) {
-    console.error("Invalid JS!");
-	 
-  }
-console.log(customX)
+
 }
 function download(filename, text) {
   var element = document.createElement('a');
@@ -600,10 +620,9 @@ fileInput.addEventListener('change', (event) => {
 
 function startCanvas() {
 clearCanvas()
-startButton.hidden=true
-menu.hidden=true
-startNewButton.hidden=true
-document.getElementById("keepWatching").hidden=true
+
+
+MButtons.hidden=true
 //Plant the seeds of poopshittery (real)
 factions=[]
 for (let i = 0; i < settings.startingAnts; i++) {
@@ -638,11 +657,12 @@ canvas.style.left=`${-wo}px`
 
 }
 function lpt() {//lone painter tick
+gt+=1
 curr=entities[0]
 antBrain(curr)
 }
 function tick() {
-
+gt+=1
 if(canvas.width != w||canvas.height != h){transformCanvas()}
 
 if (entities.length>0){
@@ -660,22 +680,23 @@ ctx.fillRect(random(0,w),random(0,h),1,1)
 }
 ctx.globalAlpha = 1;
 }
-
+//TODO swap pan/zoom system to .transform
 ctx.globalAlpha = 1;
 for (i in entities) {
 curr = entities[i]
+
 if (curr.delete){console.log("Panic!!")}
 if (isNaN(curr.life)||curr.life<0){curr.remove=true;totalAnts-=1;curr.faction.ants-=1}
-if (!freezeAi){antBrain(curr)}
+if (!freezeAi&&entities[i]){antBrain(curr)}
 
 }
-if (settings.antsDie){
+if (settings.antsDie&&!settings.oneAnt){
 entities = entities.filter((ent) => !ent.remove);
 }
 }
 }
-supersets = {lonePainter:false}
-settings = {fadeAmount:1,showAnts:false,runsPerTick:navigator.hardwareConcurrency*2,startingAnts:18,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,grainyBackground:false,grainAmnt:10,antSize:1,violentAnts:false,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1,freeForAll:false,antsDie:true,colorPulse:false,antAgression:100,desiredPop:1000,reactivePopulation:true,lonePainter:false}
+supersets = {lonePainter:false,paused:false}
+settings = {fadeAmount:1,showAnts:false,runsPerTick:navigator.hardwareConcurrency*2,startingAnts:18,erode:false,fade:true,gameSpeed:0,bColor:"#000000",fadeSpeed:15,grainyBackground:false,grainAmnt:10,antSize:1,violentAnts:false,useLines:true,oneAnt:false,forceColor:false,colorToForce:"#000000",capSpeed:true,drawGrain:1,freeForAll:false,antsDie:true,colorPulse:false,antAgression:100,desiredPop:1000,reactivePopulation:true}
 const isMobile = isDisGuyMobile()
 
 
@@ -723,7 +744,7 @@ ctx.fillStyle=settings.bColor
 
 ctx.fillRect(0,0,w,h)
 
-//Plant the seeds of poopshittery (real)
+//Plant the seeds of poopshittery (real asf)
 factions=[]
 for (let i = 0; i < settings.startingAnts; i++) {
 rx=random(0,w)
@@ -743,7 +764,25 @@ s1=Math.sin((a.value,d)/2)/2
 s2=Math.sin((a.value,b.value)/2)/2
 return Math.abs(s1+s2)*100
 }
+customMovestyle="(x,y,v,t) => "+ generateRandomMath()
+function startLonePainter() {
+antEditor.hidden=true
+supersets.paused=false
+MButtons.hidden=true
+supersets.lonePainter=true
+custom=customMovestyle
 
+clearCanvas()
+fac=factions.push({ants:0,targ:{x:rx,y:ry}})
+birthAnt(fac,w/2,h/2,random(0,225),random(0,225),random(0,225),0,{aggression:1,bRateMod:1,usesCustomXY:0,synced:0,snap:0})
+ant=entities[0]
+settings.oneAnt=true
+if (String(custom).split('').length>0){
+console.log("applied custom movestyle to new ant!",)
+ant.moveStyle.v=custom
+}
+
+}
 function tickRepeat() {
 
 nx = random(0,w)
@@ -751,7 +790,7 @@ ny = random(0,h)
 fadeSpeed=Number(settings.fadeSpeed)
 fadeStart=fadeSpeed-a
 
-if (settings.fade&&(gt%6)==5){
+if (settings.fade&&(gt%Number(settings.fadeSpeed))==5){
 
 slowDarken(hexToRgb(settings.bColor),settings.fadeAmount,(gt%12)-6)
 
@@ -759,11 +798,13 @@ slowDarken(hexToRgb(settings.bColor),settings.fadeAmount,(gt%12)-6)
 if (settings.oneAnt){settings.reactivePopulation=false;entities.length=1}
 
 tStart=Date.now()
-gt+=1
-if (!settings.lonePainter){
-tick()
-}else{lpt()}
+
+if (!supersets.paused){
+if (!supersets.lonePainter){
 for (i = 0;i <settings.runsPerTick; i++){tick(!!(i==settings.runsPerTick))}
+}else{for (i = 0;i <settings.runsPerTick; i++){lpt(!!(i==settings.runsPerTick))} ;}
+}
+
 setTimeout(()=> {
 tickDelay=Math.abs((Date.now()-tStart))-settings.gameSpeed
 diff=((tickDelay-tdSlow)/100)
@@ -774,14 +815,65 @@ if ((gt%10)==5){}
 tickRepeat()
 },settings.gameSpeed)
 }
-function generatePreview (style,runs) {
-for (let i = 0; i < runs ; i++) {
+cmIn=document.getElementById("movestyleEditorTextbox")
+document.getElementById("startValue").addEventListener('input', (evnt) => {generatePreview(cmIn.value.replaceAll('\n',';'),100)})
+cmIn.addEventListener('input', (evnt) => {generatePreview(cmIn.value.replaceAll('\n',';'),100)})
 
+
+
+previewCanvas=document.getElementById("preview")
+const pctx = previewCanvas.getContext("2d",{ willReadFrequently: false });
+
+
+function generatePreview (style) {
+
+style = "(x,y,v,t) => "+style
+valid=true
+try {
+blindEval(style)(random(-100,100),random(-100,100),random(-100,100),random(-100,100))
+}
+catch (error) {
+ 
+	 valid=false
+	 
+  }
+
+if (valid){
+pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height)
+runs=Number(document.getElementById("runsValue").value)
+
+
+stats={x:previewCanvas.width/2,y:previewCanvas.height/2,v:Number(structuredClone(document.getElementById("startValue").value)),t:0}
+
+for (let i = 0; i < runs ; i++) {
+pctx.beginPath();
+pctx.moveTo(Math.round(stats.x), Math.round(stats.y));
+add=blindEval(style)(stats.x,stats.y,stats.v,i);
+if(!isNaN(add)&&add!==Infinity){stats.v+=add;}
+
+
+stats.x+=Math.sin(stats.v)
+stats.y+=Math.cos(stats.v)
+
+
+				pctx.strokeStyle = assembleRGB(255,255,255)
+				
+				
+
+
+				
+				pctx.lineTo(stats.x,stats.y);
+				
+				pctx.stroke(); // Render the path
+				pctx.closePath();
+}
+customMovestyle=blindEval(style)
 }
 }
 document.addEventListener('keydown',function (e){
-console.log(e)
+console.log(e.keyCode)
 if (e.keyCode==67&&!typing){csox=canvas.width/2;csoy=canvas.height/2;cZoom=1}
+if (e.keyCode==66&&!typing){antEditor.hidden=!antEditor.hidden}
 if (e.keyCode==77&&!typing){menu.hidden=!menu.hidden;canvasSizePickers.hidden=menu.hidden;moveEditor.hidden=true}
 if (e.keyCode==83&&!typing){
 
@@ -793,12 +885,8 @@ entities[i].y+=random(-5,5)
 
 }
 if (e.keyCode==78&&!typing){
-document.getElementById("keepWatching").hidden=false
-startButton.hidden=true
-startNewButton.hidden=false
-title.hidden = false
-saveButton.hidden = false
-fileInput.hidden = false
+menuButtons.hidden = !menuButtons.hidden
+
 }
 })
 var gameSpeed=0
@@ -861,7 +949,7 @@ for (let x = -1; x <= 1; x++) {
 	 }
 //(settings.desiredPop+curr.mutations.bRateMod)+(entities.length-(settings.desiredPop+curr.mutations.bRateMod))
 if (settings.reactivePopulation&&!settings.oneAnt){c=(settings.desiredPop/factions.length)-(curr.faction.ants)}else{c=settings.desiredPop-entities.length}
-if (!random(0,c)&&!settings.oneAnt){birthAntFromParent(curr);curr.life-=100}
+if (!random(0,c)&&!settings.oneAnt&&!supersets.lonePainter){birthAntFromParent(curr);curr.life-=100}
 
 //add the new movement
 curr.ox=curr.x
@@ -869,7 +957,7 @@ curr.oy=curr.y
 
 draw=true
 
-if (curr.x+moves.x>w||curr.y+moves.y>h||curr.x+moves.x<0||curr.y+moves.y<0) {
+if (curr.x+moves.x>w-1||curr.y+moves.y>h-1||curr.x+moves.x<0||curr.y+moves.y<0) {
 draw=false
 if (curr.x+moves.x>w){curr.ox = 0}
 if (curr.x+moves.x>0){curr.ox = w}
